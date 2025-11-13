@@ -1,0 +1,27 @@
+/*
+
+ *  HW 6 Texture
+ *
+ *  F1 Cars
+ *
+ *  Key bindings:
+ *  m/M        Cycle through different modes
+ *  p/P        Cycle through different Perspectives
+ *  w/a/s/d    Move POV (in POV mode)
+ *  q          Toggle axes
+ *  arrows     Change view angle
+ *  0          Reset view angle
+ *  ESC        Exit
+ *  p/P        Cycle through different perspectives
+ *  [          Lower light
+ *  ]          Higher light
+ *  l,L        Toggle light
+ *  F3         Toggle light distance
+
+
+Time taken :
+Finding Images and converting to BMP - 2 hrs
+AddingTex coordinates - 2 hrs
+Finishing up - 1 hr
+
+*/
