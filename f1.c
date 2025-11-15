@@ -20,9 +20,6 @@
 
 #include "CSCIx229.h"
 
-#define NUM_CURVE_POINTS 50
-#define NUM_ROTATIONS 50
-
 int th = -50;        //  Azimuth of view angle
 int ph = 25;         //  Elevation of view angle
 int axes = 1;        //  Display axes
@@ -57,13 +54,6 @@ int zh = 90;              // Light azimuth
 float ylight = 4;         // Elevation of light
 unsigned int texture[10]; // Texture names
 
-double P[3][3] = {
-    {0.255, 0.0, 0.0},
-    {-0.102, 0.0, 0.470},
-    {-0.526, 0.0, 0.360}};
-
-double curve[NUM_CURVE_POINTS + 1][3];
-
 void reshape(int width, int height)
 {
    // Ratio of the width to the height of the window
@@ -72,147 +62,6 @@ void reshape(int width, int height)
    glViewport(0, 0, width, height);
    //  Set projection
    Project(perspective, fov, asp, dim);
-}
-
-void EvaluateBezier(double t, double result[3])
-{
-   double t2 = t * t;
-   double mt = 1.0 - t;
-   double mt2 = mt * mt;
-
-   // Quadratic Bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
-   double b0 = mt2;
-   double b1 = 2.0 * mt * t;
-   double b2 = t2;
-
-   result[0] = b0 * P[0][0] + b1 * P[1][0] + b2 * P[2][0];
-   result[1] = b0 * P[0][1] + b1 * P[1][1] + b2 * P[2][1];
-   result[2] = b0 * P[0][2] + b1 * P[1][2] + b2 * P[2][2];
-}
-
-void DrawBezierLine()
-{
-   // Evaluate curve at all sample points
-   for (int i = 0; i <= NUM_CURVE_POINTS; i++)
-   {
-      double t = i / (double)NUM_CURVE_POINTS;
-      EvaluateBezier(t, curve[i]);
-   }
-
-   // Draw the curve
-   glColor3f(1, 1, 0); // Yellow
-   glLineWidth(3);
-   glBegin(GL_LINE_STRIP);
-   for (int i = 0; i <= NUM_CURVE_POINTS; i++)
-      glVertex3f(curve[i][0], curve[i][1], curve[i][2]);
-   glEnd();
-   glLineWidth(1);
-}
-
-void DrawRotationObject()
-{
-   glColor3f(0.5, 0.8, 1.0); // Cyan
-
-   // Rotate from -180 to 0 degrees
-   for (int j = 0; j < NUM_ROTATIONS; j++)
-   {
-      double angle1 = -180.0 + (180.0 * j / NUM_ROTATIONS);
-      double angle2 = -180.0 + (180.0 * (j + 1) / NUM_ROTATIONS);
-
-      double theta1 = angle1 * M_PI / 180.0;
-      double theta2 = angle2 * M_PI / 180.0;
-
-      glBegin(GL_QUAD_STRIP);
-      for (int i = 0; i <= NUM_CURVE_POINTS; i++)
-      {
-         double x = curve[i][0];
-         double z = curve[i][2];
-
-         // Calculate tangent to the curve (derivative approximation)
-         double dx, dz;
-         if (i < NUM_CURVE_POINTS)
-         {
-            dx = curve[i + 1][0] - curve[i][0];
-            dz = curve[i + 1][2] - curve[i][2];
-         }
-         else
-         {
-            dx = curve[i][0] - curve[i - 1][0];
-            dz = curve[i][2] - curve[i - 1][2];
-         }
-
-         // For surface of revolution around X-axis:
-         // Normal = (-dz, -dx*sin(θ), dx*cos(θ))
-         double nx = -dz;
-         double ny1 = -dx * sin(theta1);
-         double nz1 = dx * cos(theta1);
-
-         double ny2 = -dx * sin(theta2);
-         double nz2 = dx * cos(theta2);
-
-         // Normalize normal 1
-         double len1 = sqrt(nx * nx + ny1 * ny1 + nz1 * nz1);
-         if (len1 > 0)
-         {
-            nx /= len1;
-            ny1 /= len1;
-            nz1 /= len1;
-         }
-
-         // Store normalized values for normal 1
-         double nx1_norm = nx;
-         double ny1_norm = ny1;
-         double nz1_norm = nz1;
-
-         // Normalize normal 2
-         double nx2 = -dz;
-         double len2 = sqrt(nx2 * nx2 + ny2 * ny2 + nz2 * nz2);
-         if (len2 > 0)
-         {
-            nx2 /= len2;
-            ny2 /= len2;
-            nz2 /= len2;
-         }
-
-         // Rotated positions
-         double y1 = -z * sin(theta1);
-         double z1 = z * cos(theta1);
-
-         double y2 = -z * sin(theta2);
-         double z2 = z * cos(theta2);
-
-         glNormal3f(-nx1_norm, -ny1_norm, -nz1_norm);
-         glVertex3f(x, y1, z1);
-
-         glNormal3f(-nx2, -ny2, -nz2);
-         glVertex3f(x, y2, z2);
-      }
-      glEnd();
-   }
-
-   // === FILL THE CIRCULAR END CAP at x = -0.526 (last point) ===
-   double end_x = curve[NUM_CURVE_POINTS][0]; // x = -0.526
-   double end_z = curve[NUM_CURVE_POINTS][2]; // z = 0.360 (radius of circle)
-
-   glBegin(GL_TRIANGLE_FAN);
-
-   // Normal for end cap points in -X direction (facing away from origin)
-   glNormal3f(-1, 0, 0);
-   glVertex3f(end_x, 0, 0); // Center of the circle (on X-axis)
-
-   // Draw circle around the X-axis
-   for (int j = 0; j <= NUM_ROTATIONS; j++)
-   {
-      double angle = -180.0 + (180.0 * j / NUM_ROTATIONS);
-      double theta = angle * M_PI / 180.0;
-
-      double y = -end_z * sin(theta);
-      double z = end_z * cos(theta);
-
-      glNormal3f(-1, 0, 0);
-      glVertex3f(end_x, y, z);
-   }
-   glEnd();
 }
 
 /*
@@ -290,18 +139,24 @@ void display()
    switch (mode)
    {
    case 0:
-      drawRoad(0, 0.02, 40, 4, 80, 0, texture);
+
+      glDisable(GL_COLOR_MATERIAL);
+      // drawRoadBlockWithCurbs(0, 0, 0, 4, 4, 0, texture);
+      drawRoadBlockRightTurn(0, 0, 0, 5.0, 3.0, 80, texture);
+      // Creates a right turn with inner radius 5, road width 3, starting at 0 degrees
+      glEnable(GL_COLOR_MATERIAL);
+      break;
    case 1:
       glDisable(GL_COLOR_MATERIAL);
-      drawF1Garage(0, 0, 0, 1, texture);
+      drawF1Garage(0, 0, 0, 1, texture, ferrariColors);
       glEnable(GL_COLOR_MATERIAL);
       break;
    case 2:
-      drawPitComplex(texture);
+      drawPitComplex(texture, ferrariColors);
       break;
    case 3:
       glDisable(GL_COLOR_MATERIAL);
-      drawF1Car(1, 1, 1, ferrariColors);
+      drawF1Car(1, 1, 1, texture, ferrariColors);
       glEnable(GL_COLOR_MATERIAL);
       break;
    }

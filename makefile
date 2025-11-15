@@ -36,7 +36,7 @@ setmaterial.o: setmaterial.c CSCIx229.h
 complexObjs.o: complexObjs.c CSCIx229.h
 
 #  Create archive
-CSCIx229.a:fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o shapes.o setmaterial.o, complexObjs.o
+CSCIx229.a:fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o shapes.o setmaterial.o complexObjs.o
 	ar -rcs $@ $^
 
 # Compile rules

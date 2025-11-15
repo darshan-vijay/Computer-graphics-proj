@@ -97,17 +97,18 @@ void Fatal(const char *format, ...);
                    double rx, double ry, double rz); // rotations (deg) about x,y,z
                                                      // Complex Objs
 
-    void drawF1Car(float length, float width, float breadth, float colors[][3]);
+    void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3]);
     void drawTireBarrierRow(double startX, double y, double z, int count, double spacing);
-    void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[]);
-    void drawTree(double x, double y, double z, double scale);
-    void drawStand(double x, double y, double z, double width, double height, double depth);
+    void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3]);
+    void drawTree(double x, double y, double z, double scale, unsigned int texture[]);
+    void drawStand(double x, double y, double z, double width, double height, double depth, unsigned int texture[]);
     void drawComplexSceneF1();
     void ball(double x, double y, double z, double r);
     void drawRoad(double x, double y, double z, double width, double length, double rotation, unsigned int texture[]);
-    void drawPitComplex(unsigned int texture[]);
+    void drawPitComplex(unsigned int texture[], float colors[][3]);
     void drawPitLane(double x, double y, double z, double width, double length, unsigned int texture[]);
-
+    void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[]);
+    void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, unsigned int texture[]);
 #ifdef __cplusplus
 }
 #endif

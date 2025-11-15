@@ -1,6 +1,157 @@
 #include "CSCIx229.h"
 
-void drawF1Car(float length, float width, float breadth, float colors[][3])
+#define NUM_CURVE_POINTS 50
+#define NUM_ROTATIONS 50
+
+double P[3][3] = {
+    {0.255, 0.0, 0.0},
+    {-0.102, 0.0, 0.470},
+    {-0.526, 0.0, 0.360}};
+
+double curve[NUM_CURVE_POINTS + 1][3];
+
+void EvaluateBezier(double t, double result[3])
+{
+    double t2 = t * t;
+    double mt = 1.0 - t;
+    double mt2 = mt * mt;
+
+    // Quadratic Bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+    double b0 = mt2;
+    double b1 = 2.0 * mt * t;
+    double b2 = t2;
+
+    result[0] = b0 * P[0][0] + b1 * P[1][0] + b2 * P[2][0];
+    result[1] = b0 * P[0][1] + b1 * P[1][1] + b2 * P[2][1];
+    result[2] = b0 * P[0][2] + b1 * P[1][2] + b2 * P[2][2];
+}
+
+void DrawBezierLine()
+{
+    // Evaluate curve at all sample points
+    for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+    {
+        double t = i / (double)NUM_CURVE_POINTS;
+        EvaluateBezier(t, curve[i]);
+    }
+
+    // Draw the curve
+    glColor3f(1, 1, 0); // Yellow
+    glLineWidth(3);
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+        glVertex3f(curve[i][0], curve[i][1], curve[i][2]);
+    glEnd();
+    glLineWidth(1);
+}
+
+void DrawRotationObject()
+{
+    glColor3f(0.5, 0.8, 1.0); // Cyan
+
+    // Rotate from -180 to 0 degrees
+    for (int j = 0; j < NUM_ROTATIONS; j++)
+    {
+        double angle1 = -180.0 + (180.0 * j / NUM_ROTATIONS);
+        double angle2 = -180.0 + (180.0 * (j + 1) / NUM_ROTATIONS);
+
+        double theta1 = angle1 * M_PI / 180.0;
+        double theta2 = angle2 * M_PI / 180.0;
+
+        glBegin(GL_QUAD_STRIP);
+        for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+        {
+            double x = curve[i][0];
+            double z = curve[i][2];
+
+            // Calculate tangent to the curve (derivative approximation)
+            double dx, dz;
+            if (i < NUM_CURVE_POINTS)
+            {
+                dx = curve[i + 1][0] - curve[i][0];
+                dz = curve[i + 1][2] - curve[i][2];
+            }
+            else
+            {
+                dx = curve[i][0] - curve[i - 1][0];
+                dz = curve[i][2] - curve[i - 1][2];
+            }
+
+            // For surface of revolution around X-axis:
+            // Normal = (-dz, -dx*sin(θ), dx*cos(θ))
+            double nx = -dz;
+            double ny1 = -dx * sin(theta1);
+            double nz1 = dx * cos(theta1);
+
+            double ny2 = -dx * sin(theta2);
+            double nz2 = dx * cos(theta2);
+
+            // Normalize normal 1
+            double len1 = sqrt(nx * nx + ny1 * ny1 + nz1 * nz1);
+            if (len1 > 0)
+            {
+                nx /= len1;
+                ny1 /= len1;
+                nz1 /= len1;
+            }
+
+            // Store normalized values for normal 1
+            double nx1_norm = nx;
+            double ny1_norm = ny1;
+            double nz1_norm = nz1;
+
+            // Normalize normal 2
+            double nx2 = -dz;
+            double len2 = sqrt(nx2 * nx2 + ny2 * ny2 + nz2 * nz2);
+            if (len2 > 0)
+            {
+                nx2 /= len2;
+                ny2 /= len2;
+                nz2 /= len2;
+            }
+
+            // Rotated positions
+            double y1 = -z * sin(theta1);
+            double z1 = z * cos(theta1);
+
+            double y2 = -z * sin(theta2);
+            double z2 = z * cos(theta2);
+
+            glNormal3f(-nx1_norm, -ny1_norm, -nz1_norm);
+            glVertex3f(x, y1, z1);
+
+            glNormal3f(-nx2, -ny2, -nz2);
+            glVertex3f(x, y2, z2);
+        }
+        glEnd();
+    }
+
+    // === FILL THE CIRCULAR END CAP at x = -0.526 (last point) ===
+    double end_x = curve[NUM_CURVE_POINTS][0]; // x = -0.526
+    double end_z = curve[NUM_CURVE_POINTS][2]; // z = 0.360 (radius of circle)
+
+    glBegin(GL_TRIANGLE_FAN);
+
+    // Normal for end cap points in -X direction (facing away from origin)
+    glNormal3f(-1, 0, 0);
+    glVertex3f(end_x, 0, 0); // Center of the circle (on X-axis)
+
+    // Draw circle around the X-axis
+    for (int j = 0; j <= NUM_ROTATIONS; j++)
+    {
+        double angle = -180.0 + (180.0 * j / NUM_ROTATIONS);
+        double theta = angle * M_PI / 180.0;
+
+        double y = -end_z * sin(theta);
+        double z = end_z * cos(theta);
+
+        glNormal3f(-1, 0, 0);
+        glVertex3f(end_x, y, z);
+    }
+    glEnd();
+}
+
+void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3])
 {
     // colors array structure:
     // colors[0] = body color (main chassis)
@@ -484,27 +635,11 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glTranslated(0, 0.6, 0);
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
     glDisable(GL_COLOR_MATERIAL);
-    drawF1Car(1, 1, 1, colors);
+    drawF1Car(1, 1, 1, texture, colors);
     glEnable(GL_COLOR_MATERIAL);
     glPopMatrix();
 
     glPopMatrix();
-}
-
-// Draw a row of tire barriers with alternating colors
-void drawTireBarrierRow(double startX, double y, double z, int count, double spacing)
-{
-    float colors[3][3] = {
-        {0.9, 0.1, 0.1}, // Red
-        {1.0, 1.0, 0.2}, // Yellow
-        {0.2, 0.4, 0.9}  // Blue
-    };
-
-    for (int i = 0; i < count; i++)
-    {
-        float *color = colors[i % 3];
-        drawTireBarrier(startX + i * spacing, y, z, 4, color[0], color[1], color[2]);
-    }
 }
 
 // Draw tire barrier (stack of colored tires)
@@ -538,6 +673,22 @@ void drawTireBarrier(double x, double y, double z, int numTires, float r, float 
     }
 
     glPopMatrix();
+}
+
+// Draw a row of tire barriers with alternating colors
+void drawTireBarrierRow(double startX, double y, double z, int count, double spacing)
+{
+    float colors[3][3] = {
+        {0.9, 0.1, 0.1}, // Red
+        {1.0, 1.0, 0.2}, // Yellow
+        {0.2, 0.4, 0.9}  // Blue
+    };
+
+    for (int i = 0; i < count; i++)
+    {
+        float *color = colors[i % 3];
+        drawTireBarrier(startX + i * spacing, y, z, 4, color[0], color[1], color[2]);
+    }
 }
 
 // Complete pit complex scene
@@ -1157,4 +1308,157 @@ void drawPitLane(double x, double y, double z, double width, double length, unsi
         glVertex3f(x - 0.3, y + 0.01, markZ + 0.3);
         glEnd();
     }
+}
+
+// Draw a road block with red and white curbs on edges
+void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[])
+{
+    glPushMatrix();
+    glTranslated(x, y, z);
+    glRotated(rotation, 0, 1, 0);
+
+    // Main road surface
+    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[0]); // Asphalt texture
+
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(0, 0);
+    glVertex3f(-width / 2, 0, -length / 2);
+    glTexCoord2f(width * 2, 0);
+    glVertex3f(width / 2, 0, -length / 2);
+    glTexCoord2f(width * 2, length * 2);
+    glVertex3f(width / 2, 0, length / 2);
+    glTexCoord2f(0, length * 2);
+    glVertex3f(-width / 2, 0, length / 2);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    // Curb parameters
+    double curbWidth = 0.2;
+    int numSegments = 8;
+    double segmentLength = length / numSegments;
+
+    // Draw alternating red and white curb segments
+    for (int i = 0; i < numSegments; i++)
+    {
+        double segZ = -length / 2 + i * segmentLength;
+
+        // Alternate between red and white
+        if (i % 2 == 0)
+        {
+            SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
+            glColor3f(1.0, 0.0, 0.0);
+        }
+        else
+        {
+            SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
+            glColor3f(1.0, 1.0, 1.0);
+        }
+
+        // Left curb segment
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f(-width / 2, 0.01, segZ);
+        glVertex3f(-width / 2 + curbWidth, 0.01, segZ);
+        glVertex3f(-width / 2 + curbWidth, 0.01, segZ + segmentLength);
+        glVertex3f(-width / 2, 0.01, segZ + segmentLength);
+        glEnd();
+
+        // Right curb segment
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f(width / 2 - curbWidth, 0.01, segZ);
+        glVertex3f(width / 2, 0.01, segZ);
+        glVertex3f(width / 2, 0.01, segZ + segmentLength);
+        glVertex3f(width / 2 - curbWidth, 0.01, segZ + segmentLength);
+        glEnd();
+    }
+
+    glPopMatrix();
+}
+
+// Draw a right turn road block with red and white curbs
+void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, unsigned int texture[])
+{
+    glPushMatrix();
+    glTranslated(x, y, z);
+    glRotated(rotation, 0, 1, 0);
+
+    double outerRadius = innerRadius + width;
+    int segments = 16;                  // Number of segments for smooth curve
+    double angleStep = 90.0 / segments; // 90 degree turn
+
+    // Main road surface - draw as multiple quads forming the curve
+    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+
+    for (int i = 0; i < segments; i++)
+    {
+        double angle1 = i * angleStep * M_PI / 180.0;
+        double angle2 = (i + 1) * angleStep * M_PI / 180.0;
+
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glTexCoord2f(0, (float)i / segments);
+        glVertex3f(innerRadius * cos(angle1), 0, innerRadius * sin(angle1));
+        glTexCoord2f(1, (float)i / segments);
+        glVertex3f(outerRadius * cos(angle1), 0, outerRadius * sin(angle1));
+        glTexCoord2f(1, (float)(i + 1) / segments);
+        glVertex3f(outerRadius * cos(angle2), 0, outerRadius * sin(angle2));
+        glTexCoord2f(0, (float)(i + 1) / segments);
+        glVertex3f(innerRadius * cos(angle2), 0, innerRadius * sin(angle2));
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+
+    // Curb parameters
+    double curbWidth = 0.2;
+    int curbSegments = 8;
+    double curbAngleStep = 90.0 / curbSegments;
+
+    // Draw alternating red and white curb segments along the curve
+    for (int i = 0; i < curbSegments; i++)
+    {
+        double angle1 = i * curbAngleStep * M_PI / 180.0;
+        double angle2 = (i + 1) * curbAngleStep * M_PI / 180.0;
+
+        // Alternate between red and white
+        if (i % 2 == 0)
+        {
+            SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
+            glColor3f(1.0, 0.0, 0.0);
+        }
+        else
+        {
+            SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
+            glColor3f(1.0, 1.0, 1.0);
+        }
+
+        // Inner curb segment
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f(innerRadius * cos(angle1), 0.01, innerRadius * sin(angle1));
+        glVertex3f((innerRadius + curbWidth) * cos(angle1), 0.01, (innerRadius + curbWidth) * sin(angle1));
+        glVertex3f((innerRadius + curbWidth) * cos(angle2), 0.01, (innerRadius + curbWidth) * sin(angle2));
+        glVertex3f(innerRadius * cos(angle2), 0.01, innerRadius * sin(angle2));
+        glEnd();
+
+        // Outer curb segment
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f((outerRadius - curbWidth) * cos(angle1), 0.01, (outerRadius - curbWidth) * sin(angle1));
+        glVertex3f(outerRadius * cos(angle1), 0.01, outerRadius * sin(angle1));
+        glVertex3f(outerRadius * cos(angle2), 0.01, outerRadius * sin(angle2));
+        glVertex3f((outerRadius - curbWidth) * cos(angle2), 0.01, (outerRadius - curbWidth) * sin(angle2));
+        glEnd();
+    }
+
+    glPopMatrix();
 }
