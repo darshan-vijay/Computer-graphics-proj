@@ -108,7 +108,8 @@ void Fatal(const char *format, ...);
     void drawPitComplex(unsigned int texture[], float colors[][3]);
     void drawPitLane(double x, double y, double z, double width, double length, unsigned int texture[]);
     void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[]);
-    void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, unsigned int texture[]);
+    void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[]);
+    void drawCircuit(unsigned int texture[]);
 #ifdef __cplusplus
 }
 #endif

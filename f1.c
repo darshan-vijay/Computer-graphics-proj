@@ -20,8 +20,8 @@
 
 #include "CSCIx229.h"
 
-int th = -50;        //  Azimuth of view angle
-int ph = 25;         //  Elevation of view angle
+int th = 180;        //  Azimuth of view angle
+int ph = 5;          //  Elevation of view angle
 int axes = 1;        //  Display axes
 int mode = 0;        //  What to display
 int perspective = 0; // Perspective
@@ -141,9 +141,7 @@ void display()
    case 0:
 
       glDisable(GL_COLOR_MATERIAL);
-      // drawRoadBlockWithCurbs(0, 0, 0, 4, 4, 0, texture);
-      drawRoadBlockRightTurn(0, 0, 0, 5.0, 3.0, 80, texture);
-      // Creates a right turn with inner radius 5, road width 3, starting at 0 degrees
+      drawCircuit(texture);
       glEnable(GL_COLOR_MATERIAL);
       break;
    case 1:

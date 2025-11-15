@@ -1382,17 +1382,16 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
 }
 
 // Draw a right turn road block with red and white curbs
-void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, unsigned int texture[])
+void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[])
 {
     glPushMatrix();
     glTranslated(x, y, z);
     glRotated(rotation, 0, 1, 0);
 
     double outerRadius = innerRadius + width;
-    int segments = 16;                  // Number of segments for smooth curve
-    double angleStep = 90.0 / segments; // 90 degree turn
+    int segments = 16;                        // Number of segments for smooth curve
+    double angleStep = degreeTurn / segments; // 90 degree turn
 
-    // Main road surface - draw as multiple quads forming the curve
     SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
 
     glEnable(GL_TEXTURE_2D);
@@ -1421,7 +1420,7 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
     // Curb parameters
     double curbWidth = 0.2;
     int curbSegments = 8;
-    double curbAngleStep = 90.0 / curbSegments;
+    double curbAngleStep = degreeTurn / curbSegments;
 
     // Draw alternating red and white curb segments along the curve
     for (int i = 0; i < curbSegments; i++)
@@ -1460,5 +1459,40 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
         glEnd();
     }
 
+    glPopMatrix();
+}
+
+void drawCircuit(unsigned int texture[])
+{
+    glPushMatrix();
+    glTranslated(-24.5, 0, -41.5);
+    // Race start/finish straight
+    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 90, texture);
+
+    // 1st right turn
+    glPushMatrix();
+    glTranslated(17.5, 0, 7);
+    // glRotated(90, 0, 1, 0);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 90, 90, texture);
+    glPopMatrix();
+    // right straight
+    glPushMatrix();
+    glTranslated(24.5, 0, 24);
+    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 0, texture);
+    glPopMatrix();
+
+    glPopMatrix();
+
+    // 2nd right turn, 130 degrees.
+    glPushMatrix();
+    glTranslated(-7, 0, 0);
+    glRotated(-60, 0, 1, 0);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 60, 130, texture);
+    glPopMatrix();
+
+    // angled straight turn till the end
+    glPushMatrix();
+    glTranslated(-24.5, 0, -5.6);
+    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 50, texture);
     glPopMatrix();
 }
