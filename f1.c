@@ -59,28 +59,27 @@ float redBullColors[3][3] = {
 double mclarenX = 4.0;
 double mclarenY = 0.0;
 double mclarenZ = 0.5;
-double mclarenRotation = 0.0; // Car's rotation angle in degrees
-double carVelocity = 0.1;     // Current forward velocity
-double maxVelocity = 0.3;     // Maximum velocity
-double acceleration = 0.06;   // Acceleration rate
-double deceleration = 0.005;  // Deceleration/friction
-double turnSpeed = 2.5;       // Degrees per key press
+double carHeading = 0.0;     // Actual direction car is facing (for movement)
+double carVelocity = 0.1;    // Current forward velocity
+double maxVelocity = 0.3;    // Maximum velocity
+double acceleration = 0.06;  // Acceleration rate
+double deceleration = 0.005; // Deceleration/friction
+double turnSpeed = 2.5;      // Degrees per key press
 
 double povX = 3;    // POV X
 double povY = 0.45; // POV Y
 double povZ = 0.5;  // POV Z
 
-// Camera offset from car (fixed relationship)
-double povOffsetX = -1.0; // 1 unit behind in X
-double povOffsetY = 0.45; // 0.45 units above
-double povOffsetZ = 0.0;  // same Z
-
 void updatePOVPosition()
 {
-   // Maintain fixed offset from car
-   povX = mclarenX + povOffsetX;
-   povY = mclarenY + povOffsetY;
-   povZ = mclarenZ + povOffsetZ;
+   // Calculate camera position behind the car based on heading
+   // Camera is positioned behind the car's current heading
+   double radHeading = (90.0 + carHeading) * M_PI / 180.0;
+   double offsetDistance = 1.0; // Distance behind car
+
+   povX = mclarenX - offsetDistance * sin(radHeading);
+   povY = mclarenY + 0.45; // Height above car
+   povZ = mclarenZ - offsetDistance * cos(radHeading);
 }
 
 // Light values
@@ -132,16 +131,10 @@ void display()
       gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
       break;
    }
-   case 1: // POV view
+   case 1: // POV view - looking at car from behind
    {
-      th = 90;
-      ph = -15;
-      double radTh = th * M_PI / 180.0;
-      double radPh = ph * M_PI / 180.0;
-      double Cx = povX + cos(radPh) * sin(radTh);
-      double Cy = povY + sin(radPh);
-      double Cz = povZ + cos(radPh) * cos(radTh);
-      gluLookAt(povX, povY, povZ, Cx, Cy, Cz, 0, 1, 0);
+      // Camera looks at the car (centered in view)
+      gluLookAt(povX, povY, povZ, mclarenX, mclarenY + 0.2, mclarenZ, 0, 1, 0);
       break;
    }
    }
@@ -192,10 +185,10 @@ void display()
       drawF1Car(1, 1, 1, texture, ferrariColors);
       glPopMatrix();
 
-      // McLaren car - with rotation
+      // McLaren car - always rotated to show heading
       glPushMatrix();
       glTranslated(mclarenX, mclarenY, mclarenZ);
-      glRotated(mclarenRotation, 0, 1, 0);
+      glRotated(carHeading, 0, 1, 0); // Always show car pointing in heading direction
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, mclarenColors);
       glPopMatrix();
@@ -253,7 +246,7 @@ void display()
    //  Five pixels from the lower left corner of the window
    glWindowPos2i(5, 5);
    //  Print the text string
-   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Rotation=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, mclarenRotation);
+   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Heading=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, carHeading);
 
    ErrCheck("display");
    glFlush();
@@ -283,14 +276,17 @@ void idle()
          carVelocity = 0;
    }
 
-   // Update car position based on velocity in FIXED direction (90 degrees)
+   // Update car position based on velocity in car's facing direction
    if (fabs(carVelocity) > 0.001)
    {
-      double radTh = 90.0 * M_PI / 180.0;
-      mclarenX += carVelocity * sin(radTh);
-      mclarenZ += carVelocity * cos(radTh);
-      updatePOVPosition();
+      // Use car's heading for movement direction
+      double radRot = (90.0 + carHeading) * M_PI / 180.0;
+      mclarenX += carVelocity * sin(radRot);
+      mclarenZ += carVelocity * cos(radRot);
    }
+
+   // Always update POV position to follow car
+   updatePOVPosition();
 
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
@@ -388,15 +384,15 @@ void key(unsigned char ch, int x, int y)
       }
       else if (ch == 'a' || ch == 'A') // Turn left
       {
-         mclarenRotation += turnSpeed;
-         if (mclarenRotation >= 360)
-            mclarenRotation -= 360;
+         carHeading += turnSpeed;
+         if (carHeading >= 360)
+            carHeading -= 360;
       }
       else if (ch == 'd' || ch == 'D') // Turn right
       {
-         mclarenRotation -= turnSpeed;
-         if (mclarenRotation < 0)
-            mclarenRotation += 360;
+         carHeading -= turnSpeed;
+         if (carHeading < 0)
+            carHeading += 360;
       }
    }
 
