@@ -317,7 +317,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     // top handle on bezier
 
-    cylinder(-2.2, 0.9, 0, 0.02, 0.38, 8, 0, 0, 0, 0, 0, 0);
+    cylinder(-2.2, 0.88, 0, 0.02, 0.38, 8, 0, 0, 0, 0, 0, 0);
 
     cylinder(-2.2, 1.06, 0, 0.02, 0.2, 8, 90, 0, 0, 0, 0, 0);
 
@@ -389,7 +389,6 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     glPopMatrix(); // End scaling transformation
 }
-
 void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3])
 {
     glPushMatrix();
@@ -407,11 +406,11 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glNormal3f(0, 1, 0);
     glTexCoord2f(0, 0);
     glVertex3f(-8, 0, -6);
-    glTexCoord2f(15, 0);
+    glTexCoord2f(8, 0);
     glVertex3f(8, 0, -6);
-    glTexCoord2f(15, 15);
+    glTexCoord2f(8, 6);
     glVertex3f(8, 0, 6);
-    glTexCoord2f(0, 15);
+    glTexCoord2f(0, 6);
     glVertex3f(-8, 0, 6);
     glEnd();
     glDisable(GL_TEXTURE_2D);
@@ -424,11 +423,11 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glNormal3f(0, 0, 1);
     glTexCoord2f(0, 0);
     glVertex3f(-8, 0, -6);
-    glTexCoord2f(15, 0);
+    glTexCoord2f(8, 0);
     glVertex3f(8, 0, -6);
-    glTexCoord2f(15, 8);
+    glTexCoord2f(8, 3);
     glVertex3f(8, 6, -6);
-    glTexCoord2f(0, 8);
+    glTexCoord2f(0, 3);
     glVertex3f(-8, 6, -6);
     glEnd();
     glDisable(GL_TEXTURE_2D);
@@ -441,11 +440,11 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glNormal3f(1, 0, 0);
     glTexCoord2f(0, 0);
     glVertex3f(-8, 0, -6);
-    glTexCoord2f(15, 0);
+    glTexCoord2f(6, 0);
     glVertex3f(-8, 0, 6);
-    glTexCoord2f(15, 8);
+    glTexCoord2f(6, 3);
     glVertex3f(-8, 6, 6);
-    glTexCoord2f(0, 8);
+    glTexCoord2f(0, 3);
     glVertex3f(-8, 6, -6);
     glEnd();
     // Right wall (X = +8)
@@ -453,11 +452,11 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glNormal3f(-1, 0, 0);
     glTexCoord2f(0, 0);
     glVertex3f(8, 0, 6);
-    glTexCoord2f(15, 0);
+    glTexCoord2f(6, 0);
     glVertex3f(8, 0, -6);
-    glTexCoord2f(15, 8);
+    glTexCoord2f(6, 3);
     glVertex3f(8, 6, -6);
-    glTexCoord2f(0, 8);
+    glTexCoord2f(0, 3);
     glVertex3f(8, 6, 6);
     glEnd();
     glDisable(GL_TEXTURE_2D);
@@ -474,12 +473,12 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
 
     // === OVERHEAD LIGHTING PANELS ===
     SetMaterial(0.9, 0.9, 0.85, 1.0, 1.0, 0.95, 0.8, 0.8, 0.8, 80);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
-        for (int j = 0; j < 3; j++)
+        for (int j = 0; j < 2; j++)
         {
-            double lx = -6 + i * 4;
-            double lz = -4 + j * 4;
+            double lx = -4 + i * 4;
+            double lz = -2 + j * 4;
             glBegin(GL_QUADS);
             glNormal3f(0, -1, 0);
             glVertex3f(lx - 0.9, 5.95, lz - 0.6);
@@ -490,180 +489,183 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
         }
     }
 
-    // === IMPROVED TOOL CABINETS (Left side, back) ===
-    // Main cabinet body (properly sized to fit wall)
+    // === TOOL CABINETS (Left side, back) ===
     SetMaterial(0.7, 0.1, 0.1, 0.9, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-    noTexCube(-6, 1.5, -4.5, 1.2, 1.5, 2.0, 0);
+    noTexCube(-6, 1.2, -4.5, 1.0, 1.2, 1.5, 0);
 
     // Cabinet top surface
     SetMaterial(0.5, 0.5, 0.5, 0.7, 0.7, 0.7, 0.4, 0.4, 0.4, 50);
-    noTexCube(-6, 3.05, -4.5, 1.25, 0.08, 2.05, 0);
+    noTexCube(-6, 2.45, -4.5, 1.05, 0.06, 1.55, 0);
 
-    // Cabinet drawers (properly arranged)
+    // Cabinet drawers
     SetMaterial(0.5, 0.08, 0.08, 0.7, 0.15, 0.15, 0.2, 0.2, 0.2, 30);
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 5; i++)
     {
-        noTexCube(-5.4, 0.5 + i * 0.48, -4.5, 1.08, 0.22, 1.9, 0);
+        noTexCube(-5.5, 0.4 + i * 0.45, -4.5, 0.9, 0.2, 1.4, 0);
     }
 
-    // Cabinet handles (silver, centered on drawers)
+    // Cabinet handles
     SetMaterial(0.5, 0.5, 0.55, 0.8, 0.8, 0.85, 1.0, 1.0, 1.0, 100);
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 5; i++)
     {
-        cylinder(-4.5, 0.5 + i * 0.48, -4.5, 0.025, 0.3, 8, 90, 0, 0, 0, 0, 0);
+        cylinder(-4.7, 0.4 + i * 0.45, -4.5, 0.02, 0.25, 6, 90, 0, 0, 0, 0, 0);
     }
 
-    // === IMPROVED WORKBENCH (Right side, back - properly fitted) ===
-    // Workbench top (longer and more realistic)
+    // === WORKBENCH (Right side, back) ===
     SetMaterial(0.4, 0.35, 0.3, 0.6, 0.5, 0.45, 0.1, 0.1, 0.1, 10);
-    noTexCube(6.2, 1.2, -4.5, 1.5, 0.1, 2.0, 0);
+    noTexCube(6, 1.0, -4.5, 1.2, 0.08, 1.5, 0);
 
     // Workbench side panels
     SetMaterial(0.35, 0.3, 0.25, 0.55, 0.45, 0.4, 0.1, 0.1, 0.1, 10);
-    noTexCube(4.8, 0.65, -4.5, 0.1, 0.65, 1.9, 0);
-    noTexCube(7.6, 0.65, -4.5, 0.1, 0.65, 1.9, 0);
+    noTexCube(4.9, 0.55, -4.5, 0.08, 0.55, 1.4, 0);
+    noTexCube(7.1, 0.55, -4.5, 0.08, 0.55, 1.4, 0);
 
     // Workbench back panel
-    noTexCube(6.2, 0.65, -5.8, 1.4, 0.65, 0.1, 0);
+    noTexCube(6, 0.55, -5.6, 1.1, 0.55, 0.08, 0);
 
-    // Legs (properly positioned at corners)
+    // Workbench legs
     SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.42, 0.3, 0.3, 0.3, 30);
-    cylinder(4.9, 0.6, -5.5, 0.06, 1.2, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(7.5, 0.6, -5.5, 0.06, 1.2, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(4.9, 0.6, -3.5, 0.06, 1.2, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(7.5, 0.6, -3.5, 0.06, 1.2, 8, 0, 0, 0, 0, 0, 0);
+    cylinder(5.0, 0.5, -5.3, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(7.0, 0.5, -5.3, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(5.0, 0.5, -3.7, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(7.0, 0.5, -3.7, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
 
     // === TIRE RACK (Right side, middle) ===
     SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.42, 0.3, 0.3, 0.3, 30);
-    // Rack frame
-    cylinder(6.5, 2, 0, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(7.5, 2, 0, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(7, 0.8, 0, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 1.6, 0, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 2.4, 0, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 3.2, 0, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+    // Rack frame (vertical posts)
+    cylinder(6.5, 2, 0.5, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
+    cylinder(7.5, 2, 0.5, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
+    // Horizontal bars
+    cylinder(7, 0.8, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(7, 1.6, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(7, 2.4, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(7, 3.2, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+
     // Tires on rack
     SetMaterial(0.01, 0.01, 0.01, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 5);
     for (int i = 0; i < 4; i++)
     {
-        cylinder(7, 0.8 + i * 0.8, 0, 0.4, 0.3, 20, 90, 0, 0, 0, 0, 0);
+        cylinder(7, 0.8 + i * 0.8, 0.5, 0.35, 0.25, 16, 90, 0, 0, 0, 0, 0);
     }
 
-    // === IMPROVED COMPUTER/TELEMETRY STATION (Left wall, middle) ===
-    // Modern desk with proper proportions
-    // === IMPROVED COMPUTER/TELEMETRY STATION (Left wall, middle) ===
+    // === COMPUTER/TELEMETRY STATION (Left wall, middle) ===
     glPushMatrix();
-    glTranslated(-6.5, 0, 2);
+    glTranslated(-7.2, 0, 2);
     glRotated(-90, 0, 1, 0);
-    // Modern desk with proper proportions
+
+    // Desk
     SetMaterial(0.15, 0.15, 0.17, 0.3, 0.3, 0.35, 0.2, 0.2, 0.2, 30);
-    noTexCube(0, 1.0, 0, 1.3, 0.1, 1.2, 0);
+    noTexCube(0, 0.8, 0, 1.0, 0.08, 1.0, 0);
 
-    // Desk legs (4 corners)
+    // Desk legs
     SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.42, 0.3, 0.3, 0.3, 30);
-    cylinder(-1.1, 0.5, -0.5, 0.05, 1.0, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(-1.1, 0.5, 0.5, 0.05, 1.0, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(1.1, 0.5, -0.5, 0.05, 1.0, 8, 0, 0, 0, 0, 0, 0);
-    cylinder(1.1, 0.5, 0.5, 0.05, 1.0, 8, 0, 0, 0, 0, 0, 0);
+    cylinder(-0.8, 0.4, -0.4, 0.04, 0.8, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(-0.8, 0.4, 0.4, 0.04, 0.8, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(0.8, 0.4, -0.4, 0.04, 0.8, 6, 0, 0, 0, 0, 0, 0);
+    cylinder(0.8, 0.4, 0.4, 0.04, 0.8, 6, 0, 0, 0, 0, 0, 0);
 
-    // Modern widescreen monitor (improved proportions)
+    // Monitor
     SetMaterial(0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 40);
-    noTexCube(0, 1.7, 0, 0.7, 0.5, 0.05, 0);
+    noTexCube(0, 1.3, 0, 0.55, 0.4, 0.04, 0);
 
-    // Monitor bezel (thin modern bezel)
+    // Monitor bezel
     SetMaterial(0.02, 0.02, 0.02, 0.05, 0.05, 0.05, 0.2, 0.2, 0.2, 50);
-    noTexCube(0, 1.7, 0.04, 0.72, 0.52, 0.02, 0);
+    noTexCube(0, 1.3, 0.04, 0.57, 0.42, 0.02, 0);
 
-    // Screen (blue glow - proper widescreen aspect)
+    // Screen (blue glow)
     SetMaterial(0.1, 0.3, 0.6, 0.2, 0.5, 1.0, 0.5, 0.7, 1.0, 60);
-    noTexCube(0, 1.7, 0.05, 0.65, 0.42, 0.01, 0);
+    noTexCube(0, 1.3, 0.05, 0.5, 0.35, 0.01, 0);
 
-    // Monitor stand (modern slim design)
+    // Monitor stand
     SetMaterial(0.3, 0.3, 0.32, 0.5, 0.5, 0.52, 0.4, 0.4, 0.4, 50);
-    noTexCube(0, 1.12, 0, 0.15, 0.08, 0.15, 0);
-    cylinder(0, 1.2, 0, 0.03, 0.35, 8, 0, 0, 0, 0, 0, 0);
+    noTexCube(0, 0.9, 0, 0.12, 0.06, 0.12, 0);
+    cylinder(0, 0.95, 0, 0.025, 0.28, 6, 0, 0, 0, 0, 0, 0);
 
-    // Keyboard (modern mechanical keyboard)
+    // Keyboard
     SetMaterial(0.1, 0.1, 0.12, 0.2, 0.2, 0.22, 0.1, 0.1, 0.1, 20);
-    noTexCube(0, 1.12, 0.5, 0.45, 0.03, 0.2, 0);
+    noTexCube(0, 0.88, 0.45, 0.4, 0.025, 0.18, 0);
 
     // Mouse
     SetMaterial(0.15, 0.15, 0.17, 0.25, 0.25, 0.27, 0.3, 0.3, 0.3, 40);
-    noTexCube(0.9, 1.12, 0.3, 0.08, 0.025, 0.12, 0);
+    noTexCube(0.7, 0.88, 0.25, 0.07, 0.02, 0.1, 0);
 
     glPopMatrix();
 
-    // === LARGE TEAM LOGO/POSTER (Back wall, centered - MUCH BIGGER) ===
-    SetMaterial(0.9, 0.1, 0.1, 1.0, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-    noTexCube(0, 4.0, -5.95, 3.5, 1.8, 0.03, 0);
+    // === TEAM LOGO/POSTER (Back wall, centered) ===
+    // Poster background (team color)
+    SetMaterial(colors[0][0] * 0.9, colors[0][1] * 0.9, colors[0][2] * 0.9,
+                colors[0][0], colors[0][1], colors[0][2],
+                0.3, 0.3, 0.3, 40);
+    noTexCube(0, 4.0, -5.95, 2.8, 1.4, 0.02, 0);
 
     // White border around poster
     SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 60);
-    noTexCube(0, 4.0, -5.93, 3.6, 1.9, 0.02, 0);
+    noTexCube(0, 4.0, -5.93, 2.9, 1.5, 0.015, 0);
 
-    // Team logo letters/emblem (larger and more prominent)
-    SetMaterial(1.0, 0.0, 0.0, 0.4, 0.0, 0.0, 0.8, 0.8, 0.8, 80);
-    // Large letters
-    noTexCube(-1.2, 4.0, -5.90, 0.35, 1.2, 0.02, 0);
-    noTexCube(1.2, 4.0, -5.90, 0.35, 1.2, 0.02, 0);
-    noTexCube(0, 4.0, -5.90, 0.5, 0.8, 0.02, 0);
+    // Team logo elements
+    SetMaterial(colors[1][0], colors[1][1], colors[1][2],
+                colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
+                0.8, 0.8, 0.8, 80);
+    noTexCube(-0.9, 4.0, -5.90, 0.3, 1.0, 0.01, 0);
+    noTexCube(0.9, 4.0, -5.90, 0.3, 1.0, 0.01, 0);
+    noTexCube(0, 4.0, -5.90, 0.4, 0.7, 0.01, 0);
 
     // === PIT BOARD (Against left wall) ===
     SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2, 0.2, 10);
     glPushMatrix();
-    glTranslated(-7.7, 1.2, -1);
+    glTranslated(-7.7, 1.0, -1);
     glRotated(15, 0, 0, 1);
-    noTexCube(0, 0, 0, 0.04, 0.9, 0.6, 0);
+    noTexCube(0, 0, 0, 0.03, 0.7, 0.5, 0);
     glPopMatrix();
+
     // Pit board handle
     SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 20);
-    glPushMatrix();
-    glTranslated(-7.7, 0.4, -1);
-    cylinder(0, 0, 0, 0.025, 0.8, 8, 0, 0, 0, 0, 0, 0);
-    glPopMatrix();
+    cylinder(-7.7, 0.3, -1, 0.02, 0.7, 6, 0, 0, 0, 0, 0, 0);
 
     // === TOOL BOARD/PEGBOARD (Right wall) ===
     SetMaterial(0.6, 0.5, 0.4, 0.8, 0.7, 0.6, 0.1, 0.1, 0.1, 10);
-    noTexCube(7.95, 3, 3, 0.04, 1.8, 1.5, 0);
+    noTexCube(7.95, 3, 3, 0.03, 1.5, 1.2, 0);
+
     // Tools hanging on board
     SetMaterial(0.5, 0.5, 0.55, 0.8, 0.8, 0.85, 1.0, 1.0, 1.0, 100);
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
     {
-        double tz = 2.0 + i * 0.5;
-        cylinder(7.9, 3.5, tz, 0.025, 0.5, 6, 90, 0, 0, 0, 0, 0);
-        cylinder(7.9, 2.5, tz, 0.025, 0.5, 6, 90, 0, 0, 0, 0, 0);
+        double tz = 2.2 + i * 0.5;
+        cylinder(7.9, 3.5, tz, 0.02, 0.4, 6, 90, 0, 0, 0, 0, 0);
+        cylinder(7.9, 2.5, tz, 0.02, 0.4, 6, 90, 0, 0, 0, 0, 0);
     }
 
     // === CABLE REELS (Right side, front) ===
     SetMaterial(1.0, 0.6, 0.0, 1.0, 0.7, 0.1, 0.3, 0.3, 0.3, 30);
-    cylinder(6.5, 0.2, 4, 0.3, 0.12, 16, 90, 0, 0, 0, 0, 0);
+    cylinder(6.5, 0.15, 4.5, 0.25, 0.1, 12, 90, 0, 0, 0, 0, 0);
     SetMaterial(0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 10);
-    cylinder(6.5, 0.2, 4, 0.06, 0.14, 12, 90, 0, 0, 0, 0, 0);
+    cylinder(6.5, 0.15, 4.5, 0.05, 0.12, 10, 90, 0, 0, 0, 0, 0);
 
     // === AIR COMPRESSOR (Back right corner) ===
     SetMaterial(0.9, 0.5, 0.1, 1.0, 0.6, 0.2, 0.4, 0.4, 0.4, 40);
-    noTexCube(5, 0.5, -1, 0.5, 0.5, 0.6, 0);
+    noTexCube(5.5, 0.4, -2, 0.4, 0.4, 0.5, 0);
     // Compressor tank
-    cylinder(5, 1, -1, 0.3, 0.8, 16, 0, 0, 0, 0, 0, 0);
+    cylinder(5.5, 0.8, -2, 0.25, 0.6, 12, 0, 0, 0, 0, 0, 0);
     // Pressure gauge
     SetMaterial(0.8, 0.8, 0.8, 1.0, 1.0, 1.0, 0.6, 0.6, 0.6, 70);
-    cylinder(5, 0.6, -1, 0.08, 0.03, 12, 90, 0, 0, 0, 0, 0);
+    cylinder(5.5, 0.5, -2, 0.06, 0.025, 10, 90, 0, 0, 0, 0, 0);
 
-    // === JACK STANDS (near car) ===
+    // === JACK STANDS (near car position) ===
     SetMaterial(0.9, 0.7, 0.1, 1.0, 0.8, 0.2, 0.5, 0.5, 0.5, 60);
     // Left jack
     glPushMatrix();
     glTranslated(-2.5, 0, 1.8);
-    noTexCube(0, 0.2, 0, 0.2, 0.2, 0.2, 0);
-    cylinder(0, 0.35, 0, 0.05, 0.5, 8, 0, 0, 0, 0, 0, 0);
-    noTexCube(0, 0.6, 0, 0.15, 0.04, 0.15, 0);
+    noTexCube(0, 0.15, 0, 0.15, 0.15, 0.15, 0);
+    cylinder(0, 0.28, 0, 0.04, 0.4, 6, 0, 0, 0, 0, 0, 0);
+    noTexCube(0, 0.5, 0, 0.12, 0.03, 0.12, 0);
     glPopMatrix();
+
     // Right jack
     glPushMatrix();
     glTranslated(2.5, 0, 1.5);
-    noTexCube(0, 0.2, 0, 0.2, 0.2, 0.2, 0);
-    cylinder(0, 0.35, 0, 0.05, 0.5, 8, 0, 0, 0, 0, 0, 0);
-    noTexCube(0, 0.6, 0, 0.15, 0.04, 0.15, 0);
+    noTexCube(0, 0.15, 0, 0.15, 0.15, 0.15, 0);
+    cylinder(0, 0.28, 0, 0.04, 0.4, 6, 0, 0, 0, 0, 0, 0);
+    noTexCube(0, 0.5, 0, 0.12, 0.03, 0.12, 0);
     glPopMatrix();
 
     // === FLOOR MARKINGS (safety lines) ===
@@ -672,19 +674,19 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glNormal3f(0, 1, 0);
     // Yellow line left
     glVertex3f(3, 0.01, -5);
-    glVertex3f(3.3, 0.01, -5);
-    glVertex3f(3.3, 0.01, 5);
+    glVertex3f(3.2, 0.01, -5);
+    glVertex3f(3.2, 0.01, 5);
     glVertex3f(3, 0.01, 5);
     // Yellow line right
     glVertex3f(-3, 0.01, -5);
-    glVertex3f(-3.3, 0.01, -5);
-    glVertex3f(-3.3, 0.01, 5);
+    glVertex3f(-3.2, 0.01, -5);
+    glVertex3f(-3.2, 0.01, 5);
     glVertex3f(-3, 0.01, 5);
     glEnd();
 
     // === THE F1 CAR (centered, facing front/opening) ===
     glPushMatrix();
-    glTranslated(0, 0.6, 0);
+    glTranslated(0, 0.35, 0);
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
     glDisable(GL_COLOR_MATERIAL);
     drawF1Car(1, 1, 1, texture, colors, 0, 0);
@@ -692,9 +694,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glPopMatrix();
 
     glPopMatrix();
-}
-
-// Draw tire barrier (stack of colored tires)
+} // Draw tire barrier (stack of colored tires)
 void drawTireBarrier(double x, double y, double z, int numTires, float r, float g, float b)
 {
     SetMaterial(r * 0.3, g * 0.3, b * 0.3, r, g, b, 0.1, 0.1, 0.1, 10);
@@ -746,26 +746,6 @@ void drawTireBarrierRow(double startX, double y, double z, int count, double spa
 // Complete pit complex scene
 void drawPitComplex(unsigned int texture[], float colors[][3])
 {
-    // === GROUND PLANE - Large base ground (LOWEST LAYER) ===
-    SetMaterial(0.12, 0.12, 0.12, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
-    glColor3f(0.25, 0.25, 0.25);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[1]); // Concrete texture
-
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(-50, 0, -10);
-    glTexCoord2f(50, 0);
-    glVertex3f(50, 0, -10);
-    glTexCoord2f(50, 100);
-    glVertex3f(50, 0, 90);
-    glTexCoord2f(0, 100);
-    glVertex3f(-50, 0, 90);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
 
     // === GRASS AREAS (LAYER 1 - y = 0.01) ===
     SetMaterial(0.1, 0.3, 0.1, 0.2, 0.5, 0.2, 0.05, 0.1, 0.05, 5);
@@ -1370,7 +1350,8 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
     glRotated(rotation, 0, 1, 0);
 
     // Main road surface
-    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+    SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
+    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]); // Asphalt texture
@@ -1432,6 +1413,9 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
         }
     }
 
+    glColor3f(1.0, 1.0, 1.0);
+    SetMaterial(0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.5, 0.5, 0.5, 50);
+
     // Add barricades on both sides
     if (barricadeTextures != NULL && numBarricadeTextures > 0)
     {
@@ -1466,7 +1450,9 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
     int segments = 16;                        // Number of segments for smooth curve
     double angleStep = degreeTurn / segments; // 90 degree turn
 
-    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+    // Main road surface - BRIGHTER material for better texture visibility
+    SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
+    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -1534,6 +1520,9 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
             glEnd();
         }
     }
+
+    glColor3f(1.0, 1.0, 1.0);
+
     glPopMatrix();
 }
 
@@ -1547,7 +1536,9 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
     int segments = 16; // Number of segments for smooth curve
     double angleStep = degreeTurn / segments;
 
-    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+    // Main road surface - BRIGHTER material for better texture visibility
+    SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
+    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -1616,8 +1607,13 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
             glEnd();
         }
     }
+
+    // Reset state after curbs
+    glColor3f(1.0, 1.0, 1.0);
+
     glPopMatrix();
 }
+
 void drawCircuit(unsigned int roadTexture[], unsigned int barricadeTextures[], int numBarricadeTextures)
 {
     // Draw light grey ground rectangle

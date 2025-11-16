@@ -180,6 +180,14 @@ void display()
    switch (mode)
    {
    case 0:
+
+      glPushMatrix();
+      glTranslated(2, 0, 8);
+      glScaled(0.2, 0.2, 0.2);
+      glRotated(90, 0, 1, 0);
+      drawPitComplex(texture, ferrariColors);
+      glPopMatrix();
+
       glDisable(GL_COLOR_MATERIAL);
       drawCircuit(texture, barricadeTexture, sizeof(barricadeTexture) / sizeof(barricadeTexture[0]));
 
