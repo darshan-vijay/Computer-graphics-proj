@@ -54,10 +54,17 @@ float redBullColors[3][3] = {
     {1.0, 0.85, 0.0}, // Fins: Red Bull Yellow
     {0.7, 0.7, 0.75}  // Halo: Silver
 };
-// McLaren car position
+
+// McLaren car position and physics
 double mclarenX = 4.0;
 double mclarenY = 0.0;
 double mclarenZ = 0.5;
+double mclarenRotation = 0.0; // Car's rotation angle in degrees
+double carVelocity = 0.1;     // Current forward velocity
+double maxVelocity = 0.3;     // Maximum velocity
+double acceleration = 0.06;   // Acceleration rate
+double deceleration = 0.005;  // Deceleration/friction
+double turnSpeed = 2.5;       // Degrees per key press
 
 double povX = 3;    // POV X
 double povY = 0.45; // POV Y
@@ -185,9 +192,10 @@ void display()
       drawF1Car(1, 1, 1, texture, ferrariColors);
       glPopMatrix();
 
-      // McLaren car - no rotation, just position
+      // McLaren car - with rotation
       glPushMatrix();
       glTranslated(mclarenX, mclarenY, mclarenZ);
+      glRotated(mclarenRotation, 0, 1, 0);
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, mclarenColors);
       glPopMatrix();
@@ -245,7 +253,7 @@ void display()
    //  Five pixels from the lower left corner of the window
    glWindowPos2i(5, 5);
    //  Print the text string
-   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Light Y=%.1f, Distance=%d", th, ph, textPers[perspective], text[mode], ylight, distance);
+   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Rotation=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, mclarenRotation);
 
    ErrCheck("display");
    glFlush();
@@ -260,6 +268,30 @@ void idle()
    //  Elapsed time in seconds
    double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
    zh = fmod(90 * t, 360.0);
+
+   // Apply velocity and friction
+   if (carVelocity > 0)
+   {
+      carVelocity -= deceleration;
+      if (carVelocity < 0)
+         carVelocity = 0;
+   }
+   else if (carVelocity < 0)
+   {
+      carVelocity += deceleration;
+      if (carVelocity > 0)
+         carVelocity = 0;
+   }
+
+   // Update car position based on velocity in FIXED direction (90 degrees)
+   if (fabs(carVelocity) > 0.001)
+   {
+      double radTh = 90.0 * M_PI / 180.0;
+      mclarenX += carVelocity * sin(radTh);
+      mclarenZ += carVelocity * cos(radTh);
+      updatePOVPosition();
+   }
+
    //  Tell GLUT it is necessary to redisplay the scene
    glutPostRedisplay();
 }
@@ -305,8 +337,6 @@ void special(int key, int x, int y)
  */
 void key(unsigned char ch, int x, int y)
 {
-   double moveSpeed = 0.15;
-
    //  Exit on ESC
    if (ch == 27)
       exit(0);
@@ -344,32 +374,29 @@ void key(unsigned char ch, int x, int y)
    // Handle car driving in POV mode
    if (perspective == 1 && mode == 0)
    {
-      // Fixed view direction: th = 90 degrees
-      double radTh = 90.0 * M_PI / 180.0;
-
-      if (ch == 'w' || ch == 'W') // Forward
+      if (ch == 'w' || ch == 'W') // Forward with acceleration
       {
-         mclarenX += moveSpeed * sin(radTh);
-         mclarenZ += moveSpeed * cos(radTh);
-         updatePOVPosition();
+         carVelocity += acceleration;
+         if (carVelocity > maxVelocity)
+            carVelocity = maxVelocity;
       }
-      else if (ch == 's' || ch == 'S') // Backward
+      else if (ch == 's' || ch == 'S') // Backward with acceleration
       {
-         mclarenX -= moveSpeed * sin(radTh);
-         mclarenZ -= moveSpeed * cos(radTh);
-         updatePOVPosition();
+         carVelocity -= acceleration;
+         if (carVelocity < -maxVelocity * 0.5)
+            carVelocity = -maxVelocity * 0.5;
       }
-      else if (ch == 'a' || ch == 'A') // Strafe left
+      else if (ch == 'a' || ch == 'A') // Turn left
       {
-         mclarenX += moveSpeed * sin(radTh + M_PI / 2);
-         mclarenZ += moveSpeed * cos(radTh + M_PI / 2);
-         updatePOVPosition();
+         mclarenRotation += turnSpeed;
+         if (mclarenRotation >= 360)
+            mclarenRotation -= 360;
       }
-      else if (ch == 'd' || ch == 'D') // Strafe right
+      else if (ch == 'd' || ch == 'D') // Turn right
       {
-         mclarenX -= moveSpeed * sin(radTh + M_PI / 2);
-         mclarenZ -= moveSpeed * cos(radTh + M_PI / 2);
-         updatePOVPosition();
+         mclarenRotation -= turnSpeed;
+         if (mclarenRotation < 0)
+            mclarenRotation += 360;
       }
    }
 
