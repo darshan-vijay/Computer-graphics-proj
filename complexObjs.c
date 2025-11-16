@@ -150,8 +150,7 @@ void DrawRotationObject()
     }
     glEnd();
 }
-
-void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3])
+void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking)
 {
     // colors array structure:
     // colors[0] = body color (main chassis)
@@ -161,6 +160,9 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     // - Suspension: darker metallic gray
     // - Wheels: black rubber
     // - Cockpit: slightly darker body color with transparency effect
+    // New parameters:
+    // steeringAngle: angle to rotate front wheels (positive = right, negative = left)
+    // isBraking: 1 if braking, 0 otherwise (for brake light)
 
     // Scaling factors
     float scaleX = length;  // Length scaling (front to back)
@@ -168,6 +170,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     float scaleZ = width;   // Width scaling (side to side)
 
     glPushMatrix();
+    glTranslated(0, 0.35 * scaleY, 0);
     glScalef(scaleX, scaleY, scaleZ);
 
     // === MATERIAL SETTINGS ===
@@ -237,7 +240,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1, 1, 1,
               0, 0, -90,
               0.35, 1,
-              0.35, 0.4,
+              0.35, 0.6,
               1.0);
     glPopMatrix();
 
@@ -245,7 +248,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     glPushMatrix();
     glTranslated(-4.3, 0, 0);
     noTexCube(0, 0, 0,
-              0.4, 0.35, 0.4,
+              0.6, 0.35, 0.6,
               0);
     glPopMatrix();
 
@@ -255,13 +258,43 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
 
-    rectangle(-4.4, 1.08, 0, 0.45, 2.8, -90, 0, 0); // back fin
-    rectangle(-4.4, 0.2, -0.39, 0.45, 1, 0, 0, 0);
-    rectangle(-4.4, 0.2, 0.39, 0.45, 1, 0, 0, 0);
-    rectangle(-4.4, 0.85, -0.6, 0.45, 0.6, -45, 0, 0);
-    rectangle(-4.4, 0.85, 0.6, 0.45, 0.6, 45, 0, 0);
+    rectangle(-4.4, 1.08, 0, 0.45, 1.6, -90, 0, 0); // back fin
+    rectangle(-4.4, 1.13, 0.8, 0.45, 0.1, 0, 0, 0);
+    rectangle(-4.4, 1.13, -0.8, 0.45, 0.1, 0, 0, 0);
+    rectangle(-4.4, 0.16, -0.39, 0.45, 1, 0, 0, 0);
+    rectangle(-4.4, 0.16, 0.39, 0.45, 1, 0, 0, 0);
+    rectangle(-4.4, 0.85, -0.6, 0.45, 0.62, -45, 0, 0);
+    rectangle(-4.4, 0.85, 0.6, 0.45, 0.62, 45, 0, 0);
+
+    // === BRAKE LIGHTS ===
+    if (isBraking)
+    {
+        // Bright red glowing brake lights when braking
+        SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.3, 0.3, 50);
+        glDisable(GL_LIGHTING); // Make brake lights emit light
+        glColor3f(1.0, 0.0, 0.0);
+    }
+    else
+    {
+        // Dim red when not braking
+        SetMaterial(0.3, 0.0, 0.0, 0.3, 0.0, 0.0, 0.1, 0.0, 0.0, 10);
+    }
+
+    // brake light
+    glPushMatrix();
+    glTranslated(-4.65, 0.5, 0);
+    noTexCube(0, 0, 0, 0.08, 0.15, 0.1, 0);
+    glPopMatrix();
+
+    if (isBraking)
+    {
+        glEnable(GL_LIGHTING); // Re-enable lighting
+    }
 
     // === FRONT WING ===
+    SetMaterial(colors[1][0], colors[1][1], colors[1][2],
+                colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
+                0.8, 0.8, 0.8, 80);
     rectangle(2.4, -0.15, 0.6, 0.45, 1.5, -90, 0, -18);
     rectangle(2.4, -0.15, -0.6, 0.45, 1.5, -90, 0, 18);
 
@@ -282,15 +315,34 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     cylinder(-4, 0.15, 0.175, 0.025, 2.8, 20, 90, 10, 10, 0, 0, 0);
     cylinder(-4, -0.15, 0.175, 0.025, 2.8, 20, 90, 10, -10, 0, 0, 0);
 
+    // top handle on bezier
+
+    cylinder(-2.2, 0.9, 0, 0.02, 0.38, 8, 0, 0, 0, 0, 0, 0);
+
+    cylinder(-2.2, 1.06, 0, 0.02, 0.2, 8, 90, 0, 0, 0, 0, 0);
+
     // === WHEELS ===
     // Black rubber for tires
     SetMaterial(0.01, 0.01, 0.01, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 5);
-    // Front
+
+    // Front wheels with steering rotation
+    glPushMatrix();
+    glTranslated(1, 0, -1.35);
+    glRotated(-steeringAngle, 0, 1, 0); // Rotate around Y axis for steering
+    glTranslated(-1, 0, 1.2);
     cylinder(1, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslated(1, 0, 1.35);
+    glRotated(-steeringAngle, 0, 1, 0); // Rotate around Y axis for steering
+    glTranslated(-1, 0, -1.2);
     cylinder(1, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
-    // Rear
-    cylinder(-4, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
-    cylinder(-4, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // Rear wheels - no steering
+    cylinder(-4, 0, -1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinder(-4, 0, 1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
 
     // === COCKPIT ===
     // Slightly darker body color for cockpit (more matte finish)
@@ -302,8 +354,8 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     glTranslated(-3.7, 0.15, 0);
     glRotatef(180, 0, 1, 0);
     glScalef(3, 2.2, 1);
-    DrawBezierLine();     // Function 2: Draw the curve
-    DrawRotationObject(); // Function 3: Draw rotated surface
+    DrawBezierLine();
+    DrawRotationObject();
     glPopMatrix();
 
     // --- Front cockpit trapezoid
@@ -635,7 +687,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glTranslated(0, 0.6, 0);
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
     glDisable(GL_COLOR_MATERIAL);
-    drawF1Car(1, 1, 1, texture, colors);
+    drawF1Car(1, 1, 1, texture, colors, 0, 0);
     glEnable(GL_COLOR_MATERIAL);
     glPopMatrix();
 

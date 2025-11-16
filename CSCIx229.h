@@ -99,7 +99,7 @@ void Fatal(const char *format, ...);
     void prism(double base, double height, double depth);
     void drawBarricade(double x, double y, double z, double rotation, unsigned int texture);
     // Complex Objs
-    void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3]);
+    void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking);
     void drawTireBarrierRow(double startX, double y, double z, int count, double spacing);
     void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3]);
     void drawTree(double x, double y, double z, double scale, unsigned int texture[]);

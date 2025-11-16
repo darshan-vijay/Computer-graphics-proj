@@ -27,7 +27,7 @@ int mode = 0;        //  What to display
 int perspective = 0; // Perspective
 int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
-double dim = 10;     //  Size of world
+double dim = 4;      //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
@@ -66,6 +66,10 @@ double acceleration = 0.06;  // Acceleration rate
 double deceleration = 0.005; // Deceleration/friction
 double turnSpeed = 2.5;      // Degrees per key press
 
+// Steering and braking
+double steeringAngle = 0.0; // Current steering angle for front wheels
+int isBraking = 0;          // Brake light state
+
 double povX = 3;    // POV X
 double povY = 0.45; // POV Y
 double povZ = 0.5;  // POV Z
@@ -75,7 +79,7 @@ void updatePOVPosition()
    // Calculate camera position behind the car based on heading
    // Camera is positioned behind the car's current heading
    double radHeading = (90.0 + carHeading) * M_PI / 180.0;
-   double offsetDistance = 1.0; // Distance behind car
+   double offsetDistance = 2.0; // Distance behind car
 
    povX = mclarenX - offsetDistance * sin(radHeading);
    povY = mclarenY + 0.45; // Height above car
@@ -182,7 +186,7 @@ void display()
       glPushMatrix();
       glTranslated(6, 0, -0.5);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, ferrariColors);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       glPopMatrix();
 
       // McLaren car - always rotated to show heading
@@ -190,19 +194,19 @@ void display()
       glTranslated(mclarenX, mclarenY, mclarenZ);
       glRotated(carHeading, 0, 1, 0); // Always show car pointing in heading direction
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mclarenColors);
+      drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking);
       glPopMatrix();
 
       glPushMatrix();
       glTranslated(2, 0, -0.5);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mercedesColors);
+      drawF1Car(1, 1, 1, texture, mercedesColors, 0, 0);
       glPopMatrix();
 
       glPushMatrix();
       glTranslated(0, 0, 0.5);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, redBullColors);
+      drawF1Car(1, 1, 1, texture, redBullColors, 0, 0);
       glPopMatrix();
 
       glEnable(GL_COLOR_MATERIAL);
@@ -217,7 +221,7 @@ void display()
       break;
    case 3:
       glDisable(GL_COLOR_MATERIAL);
-      drawF1Car(1, 1, 1, texture, ferrariColors);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       glEnable(GL_COLOR_MATERIAL);
       break;
    }
@@ -246,7 +250,7 @@ void display()
    //  Five pixels from the lower left corner of the window
    glWindowPos2i(5, 5);
    //  Print the text string
-   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Heading=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, carHeading);
+   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Heading=%.1f, Steering=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, carHeading, steeringAngle);
 
    ErrCheck("display");
    glFlush();
@@ -268,12 +272,27 @@ void idle()
       carVelocity -= deceleration;
       if (carVelocity < 0)
          carVelocity = 0;
+      isBraking = 0; // Turn off brake light when coasting
    }
    else if (carVelocity < 0)
    {
       carVelocity += deceleration;
       if (carVelocity > 0)
          carVelocity = 0;
+   }
+
+   // Gradually return steering to center
+   if (steeringAngle > 0)
+   {
+      steeringAngle -= 2.0;
+      if (steeringAngle < 0)
+         steeringAngle = 0;
+   }
+   else if (steeringAngle < 0)
+   {
+      steeringAngle += 2.0;
+      if (steeringAngle > 0)
+         steeringAngle = 0;
    }
 
    // Update car position based on velocity in car's facing direction
@@ -375,24 +394,28 @@ void key(unsigned char ch, int x, int y)
          carVelocity += acceleration;
          if (carVelocity > maxVelocity)
             carVelocity = maxVelocity;
+         isBraking = 0; // Not braking
       }
       else if (ch == 's' || ch == 'S') // Backward with acceleration
       {
          carVelocity -= acceleration;
          if (carVelocity < -maxVelocity * 0.5)
             carVelocity = -maxVelocity * 0.5;
+         isBraking = 1; // Braking!
       }
       else if (ch == 'a' || ch == 'A') // Turn left
       {
          carHeading += turnSpeed;
          if (carHeading >= 360)
             carHeading -= 360;
+         steeringAngle = -25.0; // Turn wheels left
       }
       else if (ch == 'd' || ch == 'D') // Turn right
       {
          carHeading -= turnSpeed;
          if (carHeading < 0)
             carHeading += 360;
+         steeringAngle = 25.0; // Turn wheels right
       }
    }
 
