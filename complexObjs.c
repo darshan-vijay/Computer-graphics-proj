@@ -1310,8 +1310,8 @@ void drawPitLane(double x, double y, double z, double width, double length, unsi
     }
 }
 
-// Draw a road block with red and white curbs on edges
-void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[])
+// Draw a road block with red and white curbs on edges and barricades
+void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures)
 {
     glPushMatrix();
     glTranslated(x, y, z);
@@ -1341,48 +1341,70 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
     double curbWidth = 0.2;
     int numSegments = 8;
     double segmentLength = length / numSegments;
-
-    // Draw alternating red and white curb segments
-    for (int i = 0; i < numSegments; i++)
+    if (curbs)
     {
-        double segZ = -length / 2 + i * segmentLength;
-
-        // Alternate between red and white
-        if (i % 2 == 0)
+        // Draw alternating red and white curb segments
+        for (int i = 0; i < numSegments; i++)
         {
-            SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
-            glColor3f(1.0, 0.0, 0.0);
+            double segZ = -length / 2 + i * segmentLength;
+
+            // Alternate between red and white
+            if (i % 2 == 0)
+            {
+                SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 0.0, 0.0);
+            }
+            else
+            {
+                SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 1.0, 1.0);
+            }
+
+            // Left curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(-width / 2, 0.01, segZ);
+            glVertex3f(-width / 2 + curbWidth, 0.01, segZ);
+            glVertex3f(-width / 2 + curbWidth, 0.01, segZ + segmentLength);
+            glVertex3f(-width / 2, 0.01, segZ + segmentLength);
+            glEnd();
+
+            // Right curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(width / 2 - curbWidth, 0.01, segZ);
+            glVertex3f(width / 2, 0.01, segZ);
+            glVertex3f(width / 2, 0.01, segZ + segmentLength);
+            glVertex3f(width / 2 - curbWidth, 0.01, segZ + segmentLength);
+            glEnd();
         }
-        else
+    }
+
+    // Add barricades on both sides
+    if (barricadeTextures != NULL && numBarricadeTextures > 0)
+    {
+        int barricadeCount = 0;
+        double barricadeOffset = width / 2 + 0.5; // Position barricades 0.5 units outside the road edge
+
+        for (double zPos = -length / 2 + 0.5; zPos < length / 2; zPos += 1.0)
         {
-            SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
-            glColor3f(1.0, 1.0, 1.0);
+            int texIndex = (barricadeCount / 5) % numBarricadeTextures;
+
+            // Left side barricade (facing inward toward road)
+            drawBarricade(-barricadeOffset, 0, zPos, 0, barricadeTextures[texIndex]);
+
+            // Right side barricade (facing inward toward road)
+            drawBarricade(barricadeOffset, 0, zPos, 180, barricadeTextures[texIndex]);
+
+            barricadeCount++;
         }
-
-        // Left curb segment
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(-width / 2, 0.01, segZ);
-        glVertex3f(-width / 2 + curbWidth, 0.01, segZ);
-        glVertex3f(-width / 2 + curbWidth, 0.01, segZ + segmentLength);
-        glVertex3f(-width / 2, 0.01, segZ + segmentLength);
-        glEnd();
-
-        // Right curb segment
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(width / 2 - curbWidth, 0.01, segZ);
-        glVertex3f(width / 2, 0.01, segZ);
-        glVertex3f(width / 2, 0.01, segZ + segmentLength);
-        glVertex3f(width / 2 - curbWidth, 0.01, segZ + segmentLength);
-        glEnd();
     }
 
     glPopMatrix();
 }
 
 // Draw a right turn road block with red and white curbs
-void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[])
+void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs)
 {
     glPushMatrix();
     glTranslated(x, y, z);
@@ -1421,78 +1443,258 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
     double curbWidth = 0.2;
     int curbSegments = 8;
     double curbAngleStep = degreeTurn / curbSegments;
-
-    // Draw alternating red and white curb segments along the curve
-    for (int i = 0; i < curbSegments; i++)
+    if (curbs)
     {
-        double angle1 = i * curbAngleStep * M_PI / 180.0;
-        double angle2 = (i + 1) * curbAngleStep * M_PI / 180.0;
-
-        // Alternate between red and white
-        if (i % 2 == 0)
+        // Draw alternating red and white curb segments along the curve
+        for (int i = 0; i < curbSegments; i++)
         {
-            SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
-            glColor3f(1.0, 0.0, 0.0);
-        }
-        else
-        {
-            SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
-            glColor3f(1.0, 1.0, 1.0);
-        }
+            double angle1 = i * curbAngleStep * M_PI / 180.0;
+            double angle2 = (i + 1) * curbAngleStep * M_PI / 180.0;
 
-        // Inner curb segment
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(innerRadius * cos(angle1), 0.01, innerRadius * sin(angle1));
-        glVertex3f((innerRadius + curbWidth) * cos(angle1), 0.01, (innerRadius + curbWidth) * sin(angle1));
-        glVertex3f((innerRadius + curbWidth) * cos(angle2), 0.01, (innerRadius + curbWidth) * sin(angle2));
-        glVertex3f(innerRadius * cos(angle2), 0.01, innerRadius * sin(angle2));
-        glEnd();
+            // Alternate between red and white
+            if (i % 2 == 0)
+            {
+                SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 0.0, 0.0);
+            }
+            else
+            {
+                SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 1.0, 1.0);
+            }
 
-        // Outer curb segment
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f((outerRadius - curbWidth) * cos(angle1), 0.01, (outerRadius - curbWidth) * sin(angle1));
-        glVertex3f(outerRadius * cos(angle1), 0.01, outerRadius * sin(angle1));
-        glVertex3f(outerRadius * cos(angle2), 0.01, outerRadius * sin(angle2));
-        glVertex3f((outerRadius - curbWidth) * cos(angle2), 0.01, (outerRadius - curbWidth) * sin(angle2));
-        glEnd();
+            // Inner curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(innerRadius * cos(angle1), 0.01, innerRadius * sin(angle1));
+            glVertex3f((innerRadius + curbWidth) * cos(angle1), 0.01, (innerRadius + curbWidth) * sin(angle1));
+            glVertex3f((innerRadius + curbWidth) * cos(angle2), 0.01, (innerRadius + curbWidth) * sin(angle2));
+            glVertex3f(innerRadius * cos(angle2), 0.01, innerRadius * sin(angle2));
+            glEnd();
+
+            // Outer curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f((outerRadius - curbWidth) * cos(angle1), 0.01, (outerRadius - curbWidth) * sin(angle1));
+            glVertex3f(outerRadius * cos(angle1), 0.01, outerRadius * sin(angle1));
+            glVertex3f(outerRadius * cos(angle2), 0.01, outerRadius * sin(angle2));
+            glVertex3f((outerRadius - curbWidth) * cos(angle2), 0.01, (outerRadius - curbWidth) * sin(angle2));
+            glEnd();
+        }
     }
-
     glPopMatrix();
 }
 
-void drawCircuit(unsigned int texture[])
+void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs)
 {
     glPushMatrix();
-    glTranslated(-24.5, 0, -41.5);
+    glTranslated(x, y, z);
+    glRotated(rotation, 0, 1, 0);
+
+    double outerRadius = innerRadius + width;
+    int segments = 16; // Number of segments for smooth curve
+    double angleStep = degreeTurn / segments;
+
+    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+
+    for (int i = 0; i < segments; i++)
+    {
+        double angle1 = i * angleStep * M_PI / 180.0;
+        double angle2 = (i + 1) * angleStep * M_PI / 180.0;
+
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glTexCoord2f(0, (float)i / segments);
+        glVertex3f(innerRadius * cos(angle1), 0, -innerRadius * sin(angle1)); // Negated Z
+        glTexCoord2f(1, (float)i / segments);
+        glVertex3f(outerRadius * cos(angle1), 0, -outerRadius * sin(angle1)); // Negated Z
+        glTexCoord2f(1, (float)(i + 1) / segments);
+        glVertex3f(outerRadius * cos(angle2), 0, -outerRadius * sin(angle2)); // Negated Z
+        glTexCoord2f(0, (float)(i + 1) / segments);
+        glVertex3f(innerRadius * cos(angle2), 0, -innerRadius * sin(angle2)); // Negated Z
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+
+    // Curb parameters
+    double curbWidth = 0.2;
+    int curbSegments = 8;
+    double curbAngleStep = degreeTurn / curbSegments;
+
+    if (curbs)
+    {
+        // Draw alternating red and white curb segments along the curve
+        for (int i = 0; i < curbSegments; i++)
+        {
+            double angle1 = i * curbAngleStep * M_PI / 180.0;
+            double angle2 = (i + 1) * curbAngleStep * M_PI / 180.0;
+
+            // Alternate between red and white
+            if (i % 2 == 0)
+            {
+                SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 0.0, 0.0);
+            }
+            else
+            {
+                SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
+                glColor3f(1.0, 1.0, 1.0);
+            }
+
+            // Inner curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(innerRadius * cos(angle1), 0.01, -innerRadius * sin(angle1));
+            glVertex3f((innerRadius + curbWidth) * cos(angle1), 0.01, -(innerRadius + curbWidth) * sin(angle1));
+            glVertex3f((innerRadius + curbWidth) * cos(angle2), 0.01, -(innerRadius + curbWidth) * sin(angle2));
+            glVertex3f(innerRadius * cos(angle2), 0.01, -innerRadius * sin(angle2));
+            glEnd();
+
+            // Outer curb segment
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f((outerRadius - curbWidth) * cos(angle1), 0.01, -(outerRadius - curbWidth) * sin(angle1));
+            glVertex3f(outerRadius * cos(angle1), 0.01, -outerRadius * sin(angle1));
+            glVertex3f(outerRadius * cos(angle2), 0.01, -outerRadius * sin(angle2));
+            glVertex3f((outerRadius - curbWidth) * cos(angle2), 0.01, -(outerRadius - curbWidth) * sin(angle2));
+            glEnd();
+        }
+    }
+    glPopMatrix();
+}
+void drawCircuit(unsigned int roadTexture[], unsigned int barricadeTextures[], int numBarricadeTextures)
+{
+    // Draw light grey ground rectangle
+    SetMaterial(0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.2, 0.2, 0.2, 10);
+    glColor3f(0.6, 0.6, 0.6);
+
+    glPushMatrix();
+    glTranslated(0, -0.01, 0); // Slightly below road level
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    glVertex3f(-100, 0, -100);
+    glVertex3f(100, 0, -100);
+    glVertex3f(100, 0, 100);
+    glVertex3f(-100, 0, 100);
+    glEnd();
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslated(20, 0, 0);
     // Race start/finish straight
-    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 90, texture);
+    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 90, roadTexture, 1, barricadeTextures, 3);
 
     // 1st right turn
-    glPushMatrix();
-    glTranslated(17.5, 0, 7);
-    // glRotated(90, 0, 1, 0);
-    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 90, 90, texture);
-    glPopMatrix();
-    // right straight
-    glPushMatrix();
-    glTranslated(24.5, 0, 24);
-    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 0, texture);
-    glPopMatrix();
+    drawRoadBlockRightTurn(17.5, 0, 7, 5, 4, 90, 90, roadTexture, 1);
 
-    glPopMatrix();
+    // Right straight
+    drawRoadBlockWithCurbs(24.5, 0, 24, 4, 35, 0, roadTexture, 1, barricadeTextures, 3);
 
-    // 2nd right turn, 130 degrees.
+    // 2nd right turn, 130 degrees
     glPushMatrix();
-    glTranslated(-7, 0, 0);
+    glTranslated(17.5, 0, 41.5);
     glRotated(-60, 0, 1, 0);
-    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 60, 130, texture);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 60, 130, roadTexture, 1);
     glPopMatrix();
 
-    // angled straight turn till the end
+    // Angled straight
+    drawRoadBlockWithCurbs(0, 0, 35.9, 4, 35, 50, roadTexture, 1, barricadeTextures, 3);
+
+    glPopMatrix();
+
+    // angled end
+    drawRoadBlockWithCurbs(4.5, 0, 23, 4, 18, 50, roadTexture, 0, barricadeTextures, 3);
+
     glPushMatrix();
-    glTranslated(-24.5, 0, -5.6);
-    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 50, texture);
+    glTranslated(2.5, 0, 7);
+    glRotated(180, 0, 1, 0);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 0, 90, roadTexture, 1);
+    glPopMatrix();
+
+    drawRoadBlockWithCurbs(-4.5, 0, 9.8, 4, 6, 0, roadTexture, 1, barricadeTextures, 3);
+
+    glPushMatrix();
+    glTranslated(2.5, 0, 12.2);
+    drawRoadBlockLeftTurn(0, 0, 0, 5, 4, 180, 50, roadTexture, 0);
+    glPopMatrix();
+}
+
+// Draw a barricade at (x, y, z) with rotation and texture
+void drawBarricade(double x, double y, double z, double rotation, unsigned int texture)
+{
+    glPushMatrix();
+    glTranslated(x, y, z);
+    glRotated(rotation, 0, 1, 0);
+    glScaled(0.33, 0.33, 0.33);
+
+    glPushMatrix();
+    glTranslated(0, 1.5, 0);
+    // Light grey shiny material for posts
+    SetMaterial(0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.9, 0.9, 0.9, 80);
+    glColor3f(0.7, 0.7, 0.7);
+
+    // First vertical post
+    glPushMatrix();
+    glTranslated(0, 0, 0);
+    glRotated(90, 1, 0, 0);
+    prism(0.1, 0.1, 3);
+    glPopMatrix();
+
+    // First diagonal support
+    glPushMatrix();
+    glTranslated(0.38, 1.78, 0);
+    glRotated(90, 1, 0, 0);
+    glRotated(-50, 0, 1, 0);
+    prism(0.1, 0.1, 1);
+    glPopMatrix();
+
+    // Second vertical post
+    glPushMatrix();
+    glTranslated(0, 0, 3);
+
+    glPushMatrix();
+    glTranslated(0, 0, 0);
+    glRotated(90, 1, 0, 0);
+    prism(0.1, 0.1, 3);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslated(0.38, 1.78, 0);
+    glRotated(90, 1, 0, 0);
+    glRotated(-50, 0, 1, 0);
+    prism(0.1, 0.1, 1);
+    glPopMatrix();
+
+    glPopMatrix();
+
+    // Sign/board with texture - higher diffuse
+    SetMaterial(0.5, 0.5, 0.5, 0.9, 0.9, 0.9, 0.3, 0.3, 0.3, 20);
+    glPushMatrix();
+    glTranslated(0, -0.75, 1.5);
+    rectangleTex(0, 0, 0, 3, 1.5, 0, 90, 0, texture, 1);
+    glPopMatrix();
+
+    // Wires between posts - light grey shiny material
+    SetMaterial(0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.9, 0.9, 0.9, 80);
+    glColor3f(0.7, 0.7, 0.7);
+    glLineWidth(1.8);
+
+    int numWires = 8;
+    float wireHeight = 1.4 / numWires;
+
+    glBegin(GL_LINES);
+    for (int i = 1; i <= numWires; i++)
+    {
+        glVertex3f(0, i * wireHeight, 0);
+        glVertex3f(0, i * wireHeight, 3);
+    }
+    glEnd();
+
+    glLineWidth(1.0);
+    glPopMatrix();
     glPopMatrix();
 }

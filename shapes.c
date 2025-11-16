@@ -557,3 +557,41 @@ void ball(double x, double y, double z, double r)
    }
    glPopMatrix();
 }
+
+void rectangleTex(double x, double y, double z, double width, double height, double rx, double ry, double rz, unsigned int texture, int useTexture)
+{
+   glPushMatrix();
+   glTranslated(x, y, z);
+   glRotated(rx, 1, 0, 0);
+   glRotated(ry, 0, 1, 0);
+   glRotated(rz, 0, 0, 1);
+
+   if (useTexture)
+   {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, texture);
+   }
+
+   glBegin(GL_QUADS);
+   glNormal3f(0, 0, 1);
+   if (useTexture)
+      glTexCoord2f(0, 0);
+   glVertex3f(-width / 2, -height / 2, 0);
+   if (useTexture)
+      glTexCoord2f(1, 0);
+   glVertex3f(width / 2, -height / 2, 0);
+   if (useTexture)
+      glTexCoord2f(1, 1);
+   glVertex3f(width / 2, height / 2, 0);
+   if (useTexture)
+      glTexCoord2f(0, 1);
+   glVertex3f(-width / 2, height / 2, 0);
+   glEnd();
+
+   if (useTexture)
+   {
+      glDisable(GL_TEXTURE_2D);
+   }
+
+   glPopMatrix();
+}

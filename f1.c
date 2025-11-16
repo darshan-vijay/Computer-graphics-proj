@@ -6,7 +6,7 @@
  *  Key bindings:
  *  m/M        Cycle through different modes
  *  p/P        Cycle through different Perspectives
- *  w/a/s/d    Move POV (in POV mode)
+ *  w/a/s/d    Move POV/Drive car (in POV mode)
  *  q          Toggle axes
  *  arrows     Change view angle
  *  0          Reset view angle
@@ -20,14 +20,14 @@
 
 #include "CSCIx229.h"
 
-int th = 180;        //  Azimuth of view angle
-int ph = 5;          //  Elevation of view angle
+int th = 115;        //  Azimuth of view angle
+int ph = 20;         //  Elevation of view angle
 int axes = 1;        //  Display axes
 int mode = 0;        //  What to display
 int perspective = 0; // Perspective
 int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
-double dim = 4;      //  Size of world
+double dim = 10;     //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
@@ -37,22 +37,58 @@ float ferrariColors[3][3] = {
     {0.7, 0.7, 0.75}    // Halo: Silver
 };
 
-double povX = 0;   // POV X
-double povY = 1.5; // POV Y
-double povZ = 0;   // POV Z
+float mclarenColors[3][3] = {
+    {1.0, 0.45, 0.0},  // Body: Papaya Orange
+    {0.0, 0.35, 0.65}, // Fins: McLaren Blue
+    {0.7, 0.7, 0.75}   // Halo: Silver
+};
+
+float mercedesColors[3][3] = {
+    {0.0, 0.8, 0.7},    // Body: Mercedes Teal/Turquoise
+    {0.05, 0.05, 0.05}, // Fins: Black
+    {0.7, 0.7, 0.75}    // Halo: Silver
+};
+
+float redBullColors[3][3] = {
+    {0.0, 0.1, 0.4},  // Body: Navy Blue
+    {1.0, 0.85, 0.0}, // Fins: Red Bull Yellow
+    {0.7, 0.7, 0.75}  // Halo: Silver
+};
+// McLaren car position
+double mclarenX = 4.0;
+double mclarenY = 0.0;
+double mclarenZ = 0.5;
+
+double povX = 3;    // POV X
+double povY = 0.45; // POV Y
+double povZ = 0.5;  // POV Z
+
+// Camera offset from car (fixed relationship)
+double povOffsetX = -1.0; // 1 unit behind in X
+double povOffsetY = 0.45; // 0.45 units above
+double povOffsetZ = 0.0;  // same Z
+
+void updatePOVPosition()
+{
+   // Maintain fixed offset from car
+   povX = mclarenX + povOffsetX;
+   povY = mclarenY + povOffsetY;
+   povZ = mclarenZ + povOffsetZ;
+}
 
 // Light values
-int light = 1;            // Lighting
-int one = 1;              // Unit valuep
-int distance = 6;         // Light distance
-int smooth = 1;           // Smooth/Flat shading
-int local = 1;            // Local Viewer Model
-int ambient = 50;         // Ambient intensity (%)
-int diffuse = 80;         // Diffuse intensity (%)
-int specular = 80;        // Specular intensity (%)
-int zh = 90;              // Light azimuth
-float ylight = 4;         // Elevation of light
-unsigned int texture[10]; // Texture names
+int light = 1;                    // Lighting
+int one = 1;                      // Unit valuep
+int distance = 6;                 // Light distance
+int smooth = 1;                   // Smooth/Flat shading
+int local = 1;                    // Local Viewer Model
+int ambient = 50;                 // Ambient intensity (%)
+int diffuse = 80;                 // Diffuse intensity (%)
+int specular = 80;                // Specular intensity (%)
+int zh = 90;                      // Light azimuth
+float ylight = 4;                 // Elevation of light
+unsigned int texture[11];         // Texture names
+unsigned int barricadeTexture[5]; // Barricade Texture names
 
 void reshape(int width, int height)
 {
@@ -89,9 +125,10 @@ void display()
       gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
       break;
    }
-
    case 1: // POV view
    {
+      th = 90;
+      ph = -15;
       double radTh = th * M_PI / 180.0;
       double radPh = ph * M_PI / 180.0;
       double Cx = povX + cos(radPh) * sin(radTh);
@@ -139,9 +176,34 @@ void display()
    switch (mode)
    {
    case 0:
-
       glDisable(GL_COLOR_MATERIAL);
-      drawCircuit(texture);
+      drawCircuit(texture, barricadeTexture, sizeof(barricadeTexture) / sizeof(barricadeTexture[0]));
+
+      glPushMatrix();
+      glTranslated(6, 0, -0.5);
+      glScaled(0.2, 0.2, 0.2);
+      drawF1Car(1, 1, 1, texture, ferrariColors);
+      glPopMatrix();
+
+      // McLaren car - no rotation, just position
+      glPushMatrix();
+      glTranslated(mclarenX, mclarenY, mclarenZ);
+      glScaled(0.2, 0.2, 0.2);
+      drawF1Car(1, 1, 1, texture, mclarenColors);
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslated(2, 0, -0.5);
+      glScaled(0.2, 0.2, 0.2);
+      drawF1Car(1, 1, 1, texture, mercedesColors);
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslated(0, 0, 0.5);
+      glScaled(0.2, 0.2, 0.2);
+      drawF1Car(1, 1, 1, texture, redBullColors);
+      glPopMatrix();
+
       glEnable(GL_COLOR_MATERIAL);
       break;
    case 1:
@@ -243,7 +305,8 @@ void special(int key, int x, int y)
  */
 void key(unsigned char ch, int x, int y)
 {
-   double step = 0.2; // movement speed
+   double moveSpeed = 0.15;
+
    //  Exit on ESC
    if (ch == 27)
       exit(0);
@@ -253,7 +316,6 @@ void key(unsigned char ch, int x, int y)
       th = -50;
       ph = 25;
    }
-   //  Cycle through different modes
    //  Cycle through different modes
    else if (ch == 'm' || ch == 'M')
    {
@@ -269,15 +331,6 @@ void key(unsigned char ch, int x, int y)
    else if (ch == 'p' || ch == 'P')
    {
       perspective = (perspective + 1) % 2;
-      if (perspective == 2) // Entering POV mode
-      {
-         // Set POV position to ground level at a good viewing spot
-         th = 80;
-         ph = 20;
-         povX = 0;
-         povY = 1.5;
-         povZ = 0;
-      }
    }
    //  Light elevation
    else if (ch == '[')
@@ -287,44 +340,46 @@ void key(unsigned char ch, int x, int y)
    //  Toggle light
    else if (ch == 'l' || ch == 'L')
       light = !light;
-   // Handle POV movement only in POV mode
-   if (perspective == 1)
+
+   // Handle car driving in POV mode
+   if (perspective == 1 && mode == 0)
    {
-      // Calculate forward/backward
-      double radTh = th * M_PI / 180.0;
+      // Fixed view direction: th = 90 degrees
+      double radTh = 90.0 * M_PI / 180.0;
 
       if (ch == 'w' || ch == 'W') // Forward
       {
-         povX += step * sin(radTh);
-         povZ += step * cos(radTh);
+         mclarenX += moveSpeed * sin(radTh);
+         mclarenZ += moveSpeed * cos(radTh);
+         updatePOVPosition();
       }
       else if (ch == 's' || ch == 'S') // Backward
       {
-         povX -= step * sin(radTh);
-         povZ -= step * cos(radTh);
+         mclarenX -= moveSpeed * sin(radTh);
+         mclarenZ -= moveSpeed * cos(radTh);
+         updatePOVPosition();
       }
       else if (ch == 'a' || ch == 'A') // Strafe left
       {
-         povX += step * sin(radTh + M_PI / 2);
-         povZ += step * cos(radTh + M_PI / 2);
+         mclarenX += moveSpeed * sin(radTh + M_PI / 2);
+         mclarenZ += moveSpeed * cos(radTh + M_PI / 2);
+         updatePOVPosition();
       }
-      else if (ch == 'd' && ch != 'D') // Strafe right
+      else if (ch == 'd' || ch == 'D') // Strafe right
       {
-         povX -= step * sin(radTh + M_PI / 2);
-         povZ -= step * cos(radTh + M_PI / 2);
+         mclarenX -= moveSpeed * sin(radTh + M_PI / 2);
+         mclarenZ -= moveSpeed * cos(radTh + M_PI / 2);
+         updatePOVPosition();
       }
    }
 
    // Handle axes toggle
    if (ch == 'q')
       axes = 1 - axes;
+
    Project(perspective, fov, asp, dim);
    glutPostRedisplay();
 }
-
-/*
- *  GLUT calls this routine when the window is resized
- */
 
 /*
  *  Start up GLUT and tell it what to do
@@ -349,6 +404,10 @@ int main(int argc, char *argv[])
    texture[6] = LoadTexBMP("yellowside.bmp"); // yellow side texture
    texture[7] = LoadTexBMP("violetside.bmp"); // violet side texture
    texture[8] = LoadTexBMP("fireside.bmp");   // fire side texture
+
+   barricadeTexture[0] = LoadTexBMP("pirelli.bmp"); // pirelli texture
+   barricadeTexture[1] = LoadTexBMP("redbull.bmp"); // redbull texture
+   barricadeTexture[2] = LoadTexBMP("nvidia.bmp");  // nvidia texture
 
 #ifdef USEGLEW
    //  Initialize GLEW

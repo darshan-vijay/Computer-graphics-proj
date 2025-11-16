@@ -95,8 +95,10 @@ void Fatal(const char *format, ...);
     void rectangle(double x, double y, double z,     // center position
                    double w, double h,               // width and height
                    double rx, double ry, double rz); // rotations (deg) about x,y,z
-                                                     // Complex Objs
-
+    void rectangleTex(double x, double y, double z, double width, double height, double rx, double ry, double rz, unsigned int texture, int useTexture);
+    void prism(double base, double height, double depth);
+    void drawBarricade(double x, double y, double z, double rotation, unsigned int texture);
+    // Complex Objs
     void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3]);
     void drawTireBarrierRow(double startX, double y, double z, int count, double spacing);
     void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3]);
@@ -107,9 +109,10 @@ void Fatal(const char *format, ...);
     void drawRoad(double x, double y, double z, double width, double length, double rotation, unsigned int texture[]);
     void drawPitComplex(unsigned int texture[], float colors[][3]);
     void drawPitLane(double x, double y, double z, double width, double length, unsigned int texture[]);
-    void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[]);
-    void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[]);
-    void drawCircuit(unsigned int texture[]);
+    void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures);
+    void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs);
+    void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs);
+    void drawCircuit(unsigned int texture[], unsigned int barricadeTextures[], int numBarricadeTextures);
 #ifdef __cplusplus
 }
 #endif
