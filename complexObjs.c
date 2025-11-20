@@ -16,7 +16,7 @@ void EvaluateBezier(double t, double result[3])
     double mt = 1.0 - t;
     double mt2 = mt * mt;
 
-    // Quadratic Bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+    // Quadratic Bezier: B(t) = (1-t)^2 * P0 + 2(1-t)tP1 + t^2* P2
     double b0 = mt2;
     double b1 = 2.0 * mt * t;
     double b2 = t2;
@@ -36,7 +36,6 @@ void DrawBezierLine()
     }
 
     // Draw the curve
-    glColor3f(1, 1, 0); // Yellow
     glLineWidth(3);
     glBegin(GL_LINE_STRIP);
     for (int i = 0; i <= NUM_CURVE_POINTS; i++)
@@ -47,7 +46,6 @@ void DrawBezierLine()
 
 void DrawRotationObject()
 {
-    glColor3f(0.5, 0.8, 1.0); // Cyan
 
     // Rotate from -180 to 0 degrees
     for (int j = 0; j < NUM_ROTATIONS; j++)
@@ -126,15 +124,15 @@ void DrawRotationObject()
         glEnd();
     }
 
-    // === FILL THE CIRCULAR END CAP at x = -0.526 (last point) ===
+    // circular end cap at X = -0.526
     double end_x = curve[NUM_CURVE_POINTS][0]; // x = -0.526
     double end_z = curve[NUM_CURVE_POINTS][2]; // z = 0.360 (radius of circle)
 
     glBegin(GL_TRIANGLE_FAN);
 
-    // Normal for end cap points in -X direction (facing away from origin)
+    // Normal for end cap points in -X direction
     glNormal3f(-1, 0, 0);
-    glVertex3f(end_x, 0, 0); // Center of the circle (on X-axis)
+    glVertex3f(end_x, 0, 0); // Center of the circle
 
     // Draw circle around the X-axis
     for (int j = 0; j <= NUM_ROTATIONS; j++)
@@ -150,37 +148,30 @@ void DrawRotationObject()
     }
     glEnd();
 }
+
 void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking)
 {
-    // colors array structure:
-    // colors[0] = body color (main chassis)
+    // colors[0] = body color
     // colors[1] = fin/wing color (rear and front wings)
-    // colors[2] = halo/reinforcement bar color
-    // Derived colors (automatically calculated):
-    // - Suspension: darker metallic gray
-    // - Wheels: black rubber
-    // - Cockpit: slightly darker body color with transparency effect
-    // New parameters:
-    // steeringAngle: angle to rotate front wheels (positive = right, negative = left)
-    // isBraking: 1 if braking, 0 otherwise (for brake light)
+    // colors[2] = reinforcement bar color
+    // steeringAngle - angle to rotate front wheels
+    // isBraking - 1 if braking, 0 otherwise (for brake light)
 
     // Scaling factors
-    float scaleX = length;  // Length scaling (front to back)
-    float scaleY = breadth; // Height scaling (vertical)
-    float scaleZ = width;   // Width scaling (side to side)
+    float scaleX = length;
+    float scaleY = breadth;
+    float scaleZ = width;
 
     glPushMatrix();
-    glTranslated(0, 0.35 * scaleY, 0);
+    glTranslated(0, 0.65 * scaleY, 0);
     glScalef(scaleX, scaleY, scaleZ);
 
-    // === MATERIAL SETTINGS ===
     // Base metal body - using body color
     SetMaterial(colors[0][0], colors[0][1], colors[0][2],
                 colors[0][0] * 1.3, colors[0][1] * 1.3, colors[0][2] * 1.3,
                 1.0, 1.0, 1.0, 100);
 
-    // === BODY STRUCTURE ===
-    // --- First trapezoid: aligned along X, base on ground
+    // First trapezoid aligned along X, base on ground
     glPushMatrix();
     trapezoid(0, 0, 0,
               1, 1, 1,
@@ -190,7 +181,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.5);
     glPopMatrix();
 
-    // --- Second trapezoid: front taper
+    // --- Second trapezoid front taper
     glPushMatrix();
     glTranslated(1.45, 0, 0);
     glRotated(-8, 0, 0, 1);
@@ -202,7 +193,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.0);
     glPopMatrix();
 
-    // --- Third trapezoid: nose tip
+    // Third trapezoid nose tip
     glPushMatrix();
     glTranslated(2.42, -0.12, 0);
     glRotated(-15, 0, 0, 1);
@@ -214,7 +205,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               0.4);
     glPopMatrix();
 
-    // --- Rear body: larger segment behind cockpit
+    // Rear body larger segment behind cockpit
     glPushMatrix();
     glTranslated(-1.5, 0, 0);
     trapezoid(0, 0, 0,
@@ -225,7 +216,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.5);
     glPopMatrix();
 
-    // --- Rear cube section
+    // Rear cube section
     glPushMatrix();
     glTranslated(-2.25, 0, 0);
     noTexCube(0, 0, 0,
@@ -233,7 +224,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               0);
     glPopMatrix();
 
-    // --- Rear connection trapezoid
+    // Rear connection trapezoid
     glPushMatrix();
     glTranslated(-4, 0, 0);
     trapezoid(0, 0, 0,
@@ -244,7 +235,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.0);
     glPopMatrix();
 
-    // --- Rear cube end
+    // Rear cube end
     glPushMatrix();
     glTranslated(-4.3, 0, 0);
     noTexCube(0, 0, 0,
@@ -252,8 +243,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               0);
     glPopMatrix();
 
-    // === REAR WINGS AND CONNECTORS ===
-    // Using fin/wing color
+    // Rear wing and fin
     SetMaterial(colors[1][0], colors[1][1], colors[1][2],
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
@@ -266,12 +256,12 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     rectangle(-4.4, 0.85, -0.6, 0.45, 0.62, -45, 0, 0);
     rectangle(-4.4, 0.85, 0.6, 0.45, 0.62, 45, 0, 0);
 
-    // === BRAKE LIGHTS ===
+    // rear light
     if (isBraking)
     {
-        // Bright red glowing brake lights when braking
+        // red glowing brake lights when braking
         SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.3, 0.3, 50);
-        glDisable(GL_LIGHTING); // Make brake lights emit light
+        glDisable(GL_LIGHTING);
         glColor3f(1.0, 0.0, 0.0);
     }
     else
@@ -291,27 +281,26 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
         glEnable(GL_LIGHTING); // Re-enable lighting
     }
 
-    // === FRONT WING ===
+    // front wings
     SetMaterial(colors[1][0], colors[1][1], colors[1][2],
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
     rectangle(2.4, -0.15, 0.6, 0.45, 1.5, -90, 0, -18);
     rectangle(2.4, -0.15, -0.6, 0.45, 1.5, -90, 0, 18);
 
-    // === SUSPENSION ARMS ===
-    // Dark metallic gray for suspension
+    // Suspension
     SetMaterial(0.25, 0.25, 0.28, 0.4, 0.4, 0.43, 1.0, 1.0, 1.0, 100);
 
-    // Front LEFT suspension (2 diagonal arms)
+    // Front left suspension
     cylinder(1, 0.11, -0.175, 0.025, 2.8, 20, 90, 10, -10, 0, 0, 0);
     cylinder(1, -0.11, -0.175, 0.025, 2.8, 20, 90, 10, 10, 0, 0, 0);
-    // Front RIGHT suspension
+    // Front right suspension
     cylinder(1, 0.11, 0.175, 0.025, 2.8, 20, 90, 10, 10, 0, 0, 0);
     cylinder(1, -0.11, 0.175, 0.025, 2.8, 20, 90, 10, -10, 0, 0, 0);
-    // Rear LEFT suspension
+    // Rear left suspension
     cylinder(-4, 0.15, -0.175, 0.025, 2.8, 20, 90, 10, -10, 0, 0, 0);
     cylinder(-4, -0.15, -0.175, 0.025, 2.8, 20, 90, 10, 10, 0, 0, 0);
-    // Rear RIGHT suspension
+    // Rear right suspension
     cylinder(-4, 0.15, 0.175, 0.025, 2.8, 20, 90, 10, 10, 0, 0, 0);
     cylinder(-4, -0.15, 0.175, 0.025, 2.8, 20, 90, 10, -10, 0, 0, 0);
 
@@ -321,8 +310,8 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     cylinder(-2.2, 1.06, 0, 0.02, 0.2, 8, 90, 0, 0, 0, 0, 0);
 
-    // === WHEELS ===
-    // Black rubber for tires
+    // Wheels
+    // Black for tires
     SetMaterial(0.01, 0.01, 0.01, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 5);
 
     // Front wheels with steering rotation
@@ -340,12 +329,11 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     cylinder(1, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
 
-    // Rear wheels - no steering
+    // Rear wheels
     cylinder(-4, 0, -1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
     cylinder(-4, 0, 1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
 
-    // === COCKPIT ===
-    // Slightly darker body color for cockpit (more matte finish)
+    // cockpit bezier and halo
     SetMaterial(colors[0][0], colors[0][1], colors[0][2],
                 colors[0][0] * 1.3, colors[0][1] * 1.3, colors[0][2] * 1.3,
                 1.0, 1.0, 1.0, 100);
@@ -358,7 +346,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     DrawRotationObject();
     glPopMatrix();
 
-    // --- Front cockpit trapezoid
+    // Front cockpit trapezoid
     glPushMatrix();
     glTranslated(-1.3, 0.5, 0);
     glRotated(-25, 0, 0, 1);
@@ -370,8 +358,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.5);
     glPopMatrix();
 
-    // === Halo reinforcement bars ===
-    // Using halo/reinforcement color
+    // Halo reinforcement bars
     SetMaterial(colors[2][0], colors[2][1], colors[2][2],
                 colors[2][0] * 1.4, colors[2][1] * 1.4, colors[2][2] * 1.4,
                 1.2, 1.2, 1.2, 120);
@@ -389,16 +376,69 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     glPopMatrix(); // End scaling transformation
 }
+
+void squareBracketMarking()
+{
+    // Square bracket like marking
+    SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 30);
+    glPushMatrix();
+    glScaled(0.3, 0.3, 0.3);
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    // top left small line
+    glVertex3f(5.2, 0.01, 2.5);
+    glVertex3f(4.4, 0.01, 2.5);
+    glVertex3f(4.4, 0.01, 2);
+    glVertex3f(5.2, 0.01, 2);
+    // top right small line
+    glVertex3f(5.2, 0.01, -2.5);
+    glVertex3f(4.4, 0.01, -2.5);
+    glVertex3f(4.4, 0.01, -2);
+    glVertex3f(5.2, 0.01, -2);
+    // Yellow line top
+    glVertex3f(5, 0.01, -2.5);
+    glVertex3f(5.2, 0.01, -2.5);
+    glVertex3f(5.2, 0.01, 2.5);
+    glVertex3f(5, 0.01, 2.5);
+    glEnd();
+    glPopMatrix();
+}
+
 void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3])
 {
+
     glPushMatrix();
     glTranslated(x, y, z);
     glScaled(scale, scale, scale);
 
-    // Garage dimensions: 16 units wide, 12 units deep, 6 units tall
-    // Front opening at Z = +6, back wall at Z = -6
+    // Square bracket like marking
+    SetMaterial(1.0, 1.0, 0.1, 1.0, 1.0, 0.2, 0.3, 0.3, 0.3, 30);
+    glPushMatrix();
+    glTranslated(-2, 0.01, 12);
+    glRotatef(180, 0, 1, 0);
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    // top left small line
+    glVertex3f(5.2, 0.01, 2.5);
+    glVertex3f(4.8, 0.01, 2.5);
+    glVertex3f(4.8, 0.01, 2);
+    glVertex3f(5.2, 0.01, 2);
+    // top right small line
+    glVertex3f(5.2, 0.01, -2.5);
+    glVertex3f(4.8, 0.01, -2.5);
+    glVertex3f(4.8, 0.01, -2);
+    glVertex3f(5.2, 0.01, -2);
+    // Yellow line top
+    glVertex3f(5, 0.01, -2.5);
+    glVertex3f(5.2, 0.01, -2.5);
+    glVertex3f(5.2, 0.01, 2.5);
+    glVertex3f(5, 0.01, 2.5);
+    glEnd();
+    glPopMatrix();
 
-    // === GARAGE FLOOR ===
+    // Garage dimensions - 16 units wide, 12 units deep, 6 units tall
+
+    // Floor
     SetMaterial(0.15, 0.15, 0.15, 0.3, 0.3, 0.3, 0.1, 0.1, 0.1, 10);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[1]); // Concrete texture
@@ -415,7 +455,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
-    // === BACK WALL (at Z = -6) ===
+    // back wall
     SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.45, 0.1, 0.1, 0.1, 10);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[1]);
@@ -432,10 +472,10 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
-    // === SIDE WALLS ===
+    // side walls
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[1]);
-    // Left wall (X = -8)
+    // Left wall
     glBegin(GL_QUADS);
     glNormal3f(1, 0, 0);
     glTexCoord2f(0, 0);
@@ -447,7 +487,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glTexCoord2f(0, 3);
     glVertex3f(-8, 6, -6);
     glEnd();
-    // Right wall (X = +8)
+    // right wall
     glBegin(GL_QUADS);
     glNormal3f(-1, 0, 0);
     glTexCoord2f(0, 0);
@@ -461,7 +501,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glEnd();
     glDisable(GL_TEXTURE_2D);
 
-    // === CEILING ===
+    // ceiling
     SetMaterial(0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 20);
     glBegin(GL_QUADS);
     glNormal3f(0, -1, 0);
@@ -471,7 +511,15 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glVertex3f(-8, 6, 6);
     glEnd();
 
-    // === OVERHEAD LIGHTING PANELS ===
+    // Banner
+    glPushMatrix();
+    glRotatef(90, 0, 1, 0);
+    SetMaterial(0.2, 0.2, 0.2, 0.4, 0.4, 0.4, 0.2, 0.2, 0.2, 30);
+    glColor3f(0.3, 0.3, 0.3);
+    noTexCube(0, 7, 0, 0.1, 1.2, 2.5, 0);
+    glPopMatrix();
+
+    // Overhead lighting
     SetMaterial(0.9, 0.9, 0.85, 1.0, 1.0, 0.95, 0.8, 0.8, 0.8, 80);
     for (int i = 0; i < 3; i++)
     {
@@ -489,7 +537,9 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
         }
     }
 
-    // === TOOL CABINETS (Left side, back) ===
+    glPushMatrix();
+    glTranslatef(-0.3, 0, 0.3);
+    // Red tool cabinet
     SetMaterial(0.7, 0.1, 0.1, 0.9, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
     noTexCube(-6, 1.2, -4.5, 1.0, 1.2, 1.5, 0);
 
@@ -504,54 +554,39 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
         noTexCube(-5.5, 0.4 + i * 0.45, -4.5, 0.9, 0.2, 1.4, 0);
     }
 
-    // Cabinet handles
-    SetMaterial(0.5, 0.5, 0.55, 0.8, 0.8, 0.85, 1.0, 1.0, 1.0, 100);
-    for (int i = 0; i < 5; i++)
-    {
-        cylinder(-4.7, 0.4 + i * 0.45, -4.5, 0.02, 0.25, 6, 90, 0, 0, 0, 0, 0);
-    }
+    glPopMatrix();
 
-    // === WORKBENCH (Right side, back) ===
+    // brown bench
     SetMaterial(0.4, 0.35, 0.3, 0.6, 0.5, 0.45, 0.1, 0.1, 0.1, 10);
-    noTexCube(6, 1.0, -4.5, 1.2, 0.08, 1.5, 0);
+    noTexCube(6, 1.1, -4.3, 1.2, 0.08, 1.5, 0);
 
     // Workbench side panels
     SetMaterial(0.35, 0.3, 0.25, 0.55, 0.45, 0.4, 0.1, 0.1, 0.1, 10);
     noTexCube(4.9, 0.55, -4.5, 0.08, 0.55, 1.4, 0);
     noTexCube(7.1, 0.55, -4.5, 0.08, 0.55, 1.4, 0);
 
-    // Workbench back panel
-    noTexCube(6, 0.55, -5.6, 1.1, 0.55, 0.08, 0);
-
-    // Workbench legs
+    // Tire rack
     SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.42, 0.3, 0.3, 0.3, 30);
-    cylinder(5.0, 0.5, -5.3, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
-    cylinder(7.0, 0.5, -5.3, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
-    cylinder(5.0, 0.5, -3.7, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
-    cylinder(7.0, 0.5, -3.7, 0.05, 1.0, 6, 0, 0, 0, 0, 0, 0);
-
-    // === TIRE RACK (Right side, middle) ===
-    SetMaterial(0.2, 0.2, 0.22, 0.4, 0.4, 0.42, 0.3, 0.3, 0.3, 30);
-    // Rack frame (vertical posts)
+    // Rack frame vertical bars
     cylinder(6.5, 2, 0.5, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
     cylinder(7.5, 2, 0.5, 0.05, 4, 8, 0, 0, 0, 0, 0, 0);
     // Horizontal bars
-    cylinder(7, 0.8, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 1.6, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 2.4, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
-    cylinder(7, 3.2, 0.5, 0.05, 1, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(7, 0.8, 0.5, 0.05, 1, 8, 90, 0, -90, 0, 0, 0);
+    cylinder(7, 1.6, 0.5, 0.05, 1, 8, 90, 0, -90, 0, 0, 0);
+    cylinder(7, 2.4, 0.5, 0.05, 1, 8, 90, 0, -90, 0, 0, 0);
+    cylinder(7, 3.2, 0.5, 0.05, 1, 8, 90, 0, -90, 0, 0, 0);
 
     // Tires on rack
     SetMaterial(0.01, 0.01, 0.01, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 5);
     for (int i = 0; i < 4; i++)
     {
-        cylinder(7, 0.8 + i * 0.8, 0.5, 0.35, 0.25, 16, 90, 0, 0, 0, 0, 0);
+        cylinder(7, 0.8 + i * 0.8, 0.5, 0.35, 0.25, 16, 90, 0, -90, 0, 0, 0);
     }
 
-    // === COMPUTER/TELEMETRY STATION (Left wall, middle) ===
+    // Computer table
     glPushMatrix();
-    glTranslated(-7.2, 0, 2);
-    glRotated(-90, 0, 1, 0);
+    glTranslated(-6.85, 0, 2);
+    glRotated(90, 0, 1, 0);
 
     // Desk
     SetMaterial(0.15, 0.15, 0.17, 0.3, 0.3, 0.35, 0.2, 0.2, 0.2, 30);
@@ -572,13 +607,13 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     SetMaterial(0.02, 0.02, 0.02, 0.05, 0.05, 0.05, 0.2, 0.2, 0.2, 50);
     noTexCube(0, 1.3, 0.04, 0.57, 0.42, 0.02, 0);
 
-    // Screen (blue glow)
+    // Screen
     SetMaterial(0.1, 0.3, 0.6, 0.2, 0.5, 1.0, 0.5, 0.7, 1.0, 60);
-    noTexCube(0, 1.3, 0.05, 0.5, 0.35, 0.01, 0);
+    noTexCube(0, 1.3, 0.055, 0.5, 0.35, 0.01, 0);
 
     // Monitor stand
     SetMaterial(0.3, 0.3, 0.32, 0.5, 0.5, 0.52, 0.4, 0.4, 0.4, 50);
-    noTexCube(0, 0.9, 0, 0.12, 0.06, 0.12, 0);
+    noTexCube(0, 0.9, 0, 0.08, 0.06, 0.08, 0);
     cylinder(0, 0.95, 0, 0.025, 0.28, 6, 0, 0, 0, 0, 0, 0);
 
     // Keyboard
@@ -591,8 +626,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
 
     glPopMatrix();
 
-    // === TEAM LOGO/POSTER (Back wall, centered) ===
-    // Poster background (team color)
+    // Poster background
     SetMaterial(colors[0][0] * 0.9, colors[0][1] * 0.9, colors[0][2] * 0.9,
                 colors[0][0], colors[0][1], colors[0][2],
                 0.3, 0.3, 0.3, 40);
@@ -610,7 +644,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     noTexCube(0.9, 4.0, -5.90, 0.3, 1.0, 0.01, 0);
     noTexCube(0, 4.0, -5.90, 0.4, 0.7, 0.01, 0);
 
-    // === PIT BOARD (Against left wall) ===
+    // board leaned against wall
     SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2, 0.2, 10);
     glPushMatrix();
     glTranslated(-7.7, 1.0, -1);
@@ -622,7 +656,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 20);
     cylinder(-7.7, 0.3, -1, 0.02, 0.7, 6, 0, 0, 0, 0, 0, 0);
 
-    // === TOOL BOARD/PEGBOARD (Right wall) ===
+    // Tool Board
     SetMaterial(0.6, 0.5, 0.4, 0.8, 0.7, 0.6, 0.1, 0.1, 0.1, 10);
     noTexCube(7.95, 3, 3, 0.03, 1.5, 1.2, 0);
 
@@ -635,22 +669,16 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
         cylinder(7.9, 2.5, tz, 0.02, 0.4, 6, 90, 0, 0, 0, 0, 0);
     }
 
-    // === CABLE REELS (Right side, front) ===
-    SetMaterial(1.0, 0.6, 0.0, 1.0, 0.7, 0.1, 0.3, 0.3, 0.3, 30);
-    cylinder(6.5, 0.15, 4.5, 0.25, 0.1, 12, 90, 0, 0, 0, 0, 0);
-    SetMaterial(0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 10);
-    cylinder(6.5, 0.15, 4.5, 0.05, 0.12, 10, 90, 0, 0, 0, 0, 0);
-
-    // === AIR COMPRESSOR (Back right corner) ===
+    // Air compressor
     SetMaterial(0.9, 0.5, 0.1, 1.0, 0.6, 0.2, 0.4, 0.4, 0.4, 40);
-    noTexCube(5.5, 0.4, -2, 0.4, 0.4, 0.5, 0);
+    noTexCube(5.5, 0.4, -1.5, 0.4, 0.4, 0.5, 0);
     // Compressor tank
-    cylinder(5.5, 0.8, -2, 0.25, 0.6, 12, 0, 0, 0, 0, 0, 0);
+    cylinder(5.5, 0.8, -1.5, 0.25, 0.6, 12, 0, 0, 0, 0, 0, 0);
     // Pressure gauge
     SetMaterial(0.8, 0.8, 0.8, 1.0, 1.0, 1.0, 0.6, 0.6, 0.6, 70);
-    cylinder(5.5, 0.5, -2, 0.06, 0.025, 10, 90, 0, 0, 0, 0, 0);
+    cylinder(5.5, 0.5, -1.5, 0.06, 0.025, 10, 90, 0, 0, 0, 0, 0);
 
-    // === JACK STANDS (near car position) ===
+    // Jack stands
     SetMaterial(0.9, 0.7, 0.1, 1.0, 0.8, 0.2, 0.5, 0.5, 0.5, 60);
     // Left jack
     glPushMatrix();
@@ -668,7 +696,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     noTexCube(0, 0.5, 0, 0.12, 0.03, 0.12, 0);
     glPopMatrix();
 
-    // === FLOOR MARKINGS (safety lines) ===
+    // Safety yellow lines on garage floor
     SetMaterial(1.0, 1.0, 0.1, 1.0, 1.0, 0.2, 0.3, 0.3, 0.3, 30);
     glBegin(GL_QUADS);
     glNormal3f(0, 1, 0);
@@ -684,17 +712,17 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     glVertex3f(-3, 0.01, 5);
     glEnd();
 
-    // === THE F1 CAR (centered, facing front/opening) ===
+    // THE F1 CAR
     glPushMatrix();
-    glTranslated(0, 0.35, 0);
+    glTranslated(0, 0.22, 0);
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
-    glDisable(GL_COLOR_MATERIAL);
     drawF1Car(1, 1, 1, texture, colors, 0, 0);
-    glEnable(GL_COLOR_MATERIAL);
     glPopMatrix();
 
     glPopMatrix();
-} // Draw tire barrier (stack of colored tires)
+}
+
+// Draw a stack of tires as a tire barrier with numTires in stack and colors
 void drawTireBarrier(double x, double y, double z, int numTires, float r, float g, float b)
 {
     SetMaterial(r * 0.3, g * 0.3, b * 0.3, r, g, b, 0.1, 0.1, 0.1, 10);
@@ -712,7 +740,7 @@ void drawTireBarrier(double x, double y, double z, int numTires, float r, float 
         // Outer tire
         cylinder(0, 0, 0, 0.3, 0.25, 16, 90, 0, 0, 0, 0, 0);
 
-        // Inner hole (darker)
+        // Inner hole
         SetMaterial(0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.05, 0.05, 0.05, 5);
         glColor3f(0.1, 0.1, 0.1);
         cylinder(0, 0, 0, 0.15, 0.26, 12, 90, 0, 0, 0, 0, 0);
@@ -735,320 +763,14 @@ void drawTireBarrierRow(double startX, double y, double z, int count, double spa
         {1.0, 1.0, 0.2}, // Yellow
         {0.2, 0.4, 0.9}  // Blue
     };
-
     for (int i = 0; i < count; i++)
     {
-        float *color = colors[i % 3];
+        float *color = colors[(i / 5) % 3];
         drawTireBarrier(startX + i * spacing, y, z, 4, color[0], color[1], color[2]);
     }
 }
 
-// Complete pit complex scene
-void drawPitComplex(unsigned int texture[], float colors[][3])
-{
-
-    // === GRASS AREAS (LAYER 1 - y = 0.01) ===
-    SetMaterial(0.1, 0.3, 0.1, 0.2, 0.5, 0.2, 0.05, 0.1, 0.05, 5);
-    glColor3f(0.2, 0.5, 0.2);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[2]); // Grass texture
-
-    // Right grass strip (behind barriers)
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(5, 0.01, -5);
-    glTexCoord2f(5, 0);
-    glVertex3f(20, 0.01, -5);
-    glTexCoord2f(5, 85);
-    glVertex3f(20, 0.01, 80);
-    glTexCoord2f(0, 85);
-    glVertex3f(5, 0.01, 80);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-
-    // === MAIN ROAD (LAYER 2 - y = 0.02) ===
-    drawRoad(0, 0.02, 40, 4, 80, 0, texture);
-
-    // === PIT LANE (LAYER 2 - y = 0.02) ===
-    drawPitLane(-6, 0.02, 40, 4, 75, texture);
-
-    // === ROAD MARKINGS (LAYER 3 - y = 0.04) ===
-    SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
-    glColor3f(1.0, 1.0, 1.0);
-
-    // Road side white stripes (left side)
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(-2.1, 0.04, 0);
-    glVertex3f(-1.9, 0.04, 0);
-    glVertex3f(-1.9, 0.04, 80);
-    glVertex3f(-2.1, 0.04, 80);
-    glEnd();
-
-    // Road side white stripes (right side)
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(1.9, 0.04, 0);
-    glVertex3f(2.1, 0.04, 0);
-    glVertex3f(2.1, 0.04, 80);
-    glVertex3f(1.9, 0.04, 80);
-    glEnd();
-
-    // === PIT LANE ENTRY/EXIT LINES ===
-    // Entry line
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(-8, 0.04, 3);
-    glVertex3f(-4, 0.04, 3);
-    glVertex3f(-4, 0.04, 3.3);
-    glVertex3f(-8, 0.04, 3.3);
-    glEnd();
-
-    // Exit line
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(-8, 0.04, 73);
-    glVertex3f(-4, 0.04, 73);
-    glVertex3f(-4, 0.04, 73.3);
-    glVertex3f(-8, 0.04, 73.3);
-    glEnd();
-
-    // Pit lane center dashed line
-    for (int i = 0; i < 15; i++)
-    {
-        double lineZ = 5 + i * 5;
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(-6, 0.04, lineZ);
-        glVertex3f(-5.9, 0.04, lineZ);
-        glVertex3f(-5.9, 0.04, lineZ + 2);
-        glVertex3f(-6, 0.04, lineZ + 2);
-        glEnd();
-    }
-
-    // === RED/WHITE CURBS (between pit lane and track) ===
-    SetMaterial(0.8, 0.1, 0.1, 1.0, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-    for (int i = 0; i < 30; i++)
-    {
-        double curbZ = 2 + i * 2.5;
-
-        // Alternate red and white
-        if (i % 2 == 0)
-        {
-            SetMaterial(0.9, 0.1, 0.1, 1.0, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-            glColor3f(1.0, 0.2, 0.2);
-        }
-        else
-        {
-            SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.4, 0.4, 0.4, 50);
-            glColor3f(1.0, 1.0, 1.0);
-        }
-
-        noTexCube(-4, 0.08, curbZ, 0.15, 0.08, 1.2, 0);
-    }
-
-    // === FOUR GARAGES - PROPERLY SPACED ===
-    float garagePositions[4] = {8, 23, 38, 53};
-
-    for (int i = 0; i < 4; i++)
-    {
-        glPushMatrix();
-        glTranslated(-14, 0, garagePositions[i]);
-        glRotated(90, 0, 1, 0);
-        glDisable(GL_COLOR_MATERIAL);
-        drawF1Garage(0, 0, 0, 0.8, texture, colors);
-        glEnable(GL_COLOR_MATERIAL);
-        glPopMatrix();
-    }
-
-    // === IMPROVED TIRE BARRIERS (right side) ===
-    for (int i = 0; i < 16; i++)
-    {
-        double zPos = 3 + i * 4.5;
-        int colorIdx = i % 3;
-
-        if (colorIdx == 0)
-            drawTireBarrier(3.8, 0, zPos, 3, 0.9, 0.1, 0.1); // Red
-        else if (colorIdx == 1)
-            drawTireBarrier(3.8, 0, zPos, 3, 1.0, 1.0, 0.2); // Yellow
-        else
-            drawTireBarrier(3.8, 0, zPos, 3, 0.2, 0.4, 0.9); // Blue
-    }
-
-    // === SAFETY FENCE behind tire barriers ===
-    SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 40);
-    glColor3f(0.4, 0.4, 0.4);
-
-    for (int i = 0; i < 20; i++)
-    {
-        double fenceZ = 0 + i * 4;
-        cylinder(6.5, 1.5, fenceZ, 0.05, 3.0, 8, 0, 0, 0, 0, 0, 0);
-    }
-
-    // Horizontal fence bars
-    glLineWidth(2.0); // MOVE THIS BEFORE glBegin()
-    glBegin(GL_LINES);
-    for (int j = 0; j < 6; j++)
-    {
-        double barY = 0.3 + j * 0.5;
-        glVertex3f(6.5, barY, 0);
-        glVertex3f(6.5, barY, 80);
-    }
-    glEnd();
-    glLineWidth(1.0); // Reset to default
-
-    // === PIT WALL (low wall between pit boxes and track) ===
-    SetMaterial(0.7, 0.7, 0.7, 0.9, 0.9, 0.9, 0.3, 0.3, 0.3, 40);
-    glColor3f(0.8, 0.8, 0.8);
-
-    // Main wall body
-    glBegin(GL_QUADS);
-    // Front face
-    glNormal3f(1, 0, 0);
-    glVertex3f(-3.8, 0.02, 2);
-    glVertex3f(-3.8, 0.02, 75);
-    glVertex3f(-3.8, 1.2, 75);
-    glVertex3f(-3.8, 1.2, 2);
-    // Top
-    glNormal3f(0, 1, 0);
-    glVertex3f(-3.8, 1.2, 2);
-    glVertex3f(-3.8, 1.2, 75);
-    glVertex3f(-4.0, 1.2, 75);
-    glVertex3f(-4.0, 1.2, 2);
-    // Back face
-    glNormal3f(-1, 0, 0);
-    glVertex3f(-4.0, 0.02, 75);
-    glVertex3f(-4.0, 0.02, 2);
-    glVertex3f(-4.0, 1.2, 2);
-    glVertex3f(-4.0, 1.2, 75);
-    glEnd();
-
-    // === PIT CREW EQUIPMENT - Better positioned ===
-    for (int i = 0; i < 4; i++)
-    {
-        double boxZ = garagePositions[i] + 1;
-
-        // Tool carts
-        SetMaterial(0.7, 0.1, 0.1, 0.9, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-        glColor3f(0.9, 0.2, 0.2);
-        noTexCube(-5.5, 0.35, boxZ, 0.5, 0.35, 0.4, 0);
-
-        // Wheels
-        SetMaterial(0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 10);
-        glColor3f(0.15, 0.15, 0.15);
-        cylinder(-5.8, 0.1, boxZ - 0.3, 0.08, 0.08, 8, 90, 0, 0, 0, 0, 0);
-        cylinder(-5.8, 0.1, boxZ + 0.3, 0.08, 0.08, 8, 90, 0, 0, 0, 0, 0);
-        cylinder(-5.2, 0.1, boxZ - 0.3, 0.08, 0.08, 8, 90, 0, 0, 0, 0, 0);
-        cylinder(-5.2, 0.1, boxZ + 0.3, 0.08, 0.08, 8, 90, 0, 0, 0, 0, 0);
-
-        // Tire racks
-        SetMaterial(0.2, 0.3, 0.8, 0.3, 0.4, 1.0, 0.4, 0.4, 0.4, 50);
-        glColor3f(0.3, 0.4, 1.0);
-        noTexCube(-7.2, 0.4, boxZ + 2, 0.6, 0.4, 0.5, 0);
-
-        // Spare tires
-        SetMaterial(0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.05, 0.05, 0.05, 5);
-        glColor3f(0.1, 0.1, 0.1);
-        cylinder(-7.2, 0.6, boxZ + 2, 0.3, 0.25, 16, 90, 0, 0, 0, 0, 0);
-    }
-
-    // === TEAM NUMBER BOARDS above each garage ===
-    for (int i = 0; i < 4; i++)
-    {
-        double boardZ = garagePositions[i];
-
-        // Board backing
-        SetMaterial(0.2, 0.2, 0.2, 0.4, 0.4, 0.4, 0.2, 0.2, 0.2, 30);
-        glColor3f(0.3, 0.3, 0.3);
-        noTexCube(-13.8, 5.2, boardZ, 0.1, 1.2, 2.5, 0);
-
-        // Team color stripe
-        if (i == 0)
-            SetMaterial(0.8, 0.1, 0.1, 1.0, 0.2, 0.2, 0.3, 0.3, 0.3, 40); // Red
-        else if (i == 1)
-            SetMaterial(0.1, 0.3, 0.8, 0.2, 0.4, 1.0, 0.4, 0.4, 0.4, 50); // Blue
-        else if (i == 2)
-            SetMaterial(0.9, 0.6, 0.1, 1.0, 0.7, 0.2, 0.3, 0.3, 0.3, 40); // Orange
-        else
-            SetMaterial(0.2, 0.7, 0.2, 0.3, 0.9, 0.3, 0.3, 0.3, 0.3, 40); // Green
-
-        noTexCube(-13.7, 5.2, boardZ, 0.08, 0.3, 2.4, 0);
-    }
-
-    // === PIT LANE SIGNS ===
-    SetMaterial(0.2, 0.2, 0.2, 0.4, 0.4, 0.4, 0.1, 0.1, 0.1, 10);
-    glColor3f(0.3, 0.3, 0.3);
-
-    // Pit lane ENTRY sign
-    cylinder(-6.5, 0.75, 1, 0.06, 1.5, 8, 0, 0, 0, 0, 0, 0);
-    SetMaterial(1.0, 1.0, 0.2, 1.0, 1.0, 0.3, 0.3, 0.3, 0.3, 30);
-    glColor3f(1.0, 1.0, 0.3);
-    noTexCube(-6.45, 2.0, 1, 0.08, 0.6, 0.8, 0);
-    // "PIT IN" text indicator
-    SetMaterial(0.0, 0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10);
-    glColor3f(0.0, 0.0, 0.0);
-    noTexCube(-6.4, 2.0, 1, 0.05, 0.3, 0.6, 0);
-
-    // Pit lane EXIT sign
-    SetMaterial(0.2, 0.2, 0.2, 0.4, 0.4, 0.4, 0.1, 0.1, 0.1, 10);
-    glColor3f(0.3, 0.3, 0.3);
-    cylinder(-6.5, 0.75, 75, 0.06, 1.5, 8, 0, 0, 0, 0, 0, 0);
-    SetMaterial(1.0, 1.0, 0.2, 1.0, 1.0, 0.3, 0.3, 0.3, 0.3, 30);
-    glColor3f(1.0, 1.0, 0.3);
-    noTexCube(-6.45, 2.0, 75, 0.08, 0.6, 0.8, 0);
-    // "PIT OUT" text indicator
-    SetMaterial(0.0, 0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10);
-    glColor3f(0.0, 0.0, 0.0);
-    noTexCube(-6.4, 2.0, 75, 0.05, 0.3, 0.6, 0);
-
-    // === SPEED LIMIT SIGNS (80 km/h typical for pit lane) ===
-    for (int i = 1; i < 4; i++)
-    {
-        double signZ = garagePositions[i] - 2;
-
-        SetMaterial(0.2, 0.2, 0.2, 0.4, 0.4, 0.4, 0.1, 0.1, 0.1, 10);
-        glColor3f(0.3, 0.3, 0.3);
-        cylinder(-3.7, 0.6, signZ, 0.04, 1.2, 8, 0, 0, 0, 0, 0, 0);
-
-        SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 30);
-        glColor3f(1.0, 1.0, 1.0);
-        cylinder(-3.7, 1.6, signZ, 0.25, 0.05, 16, 90, 0, 0, 0, 0, 0);
-
-        // Red border
-        SetMaterial(0.9, 0.1, 0.1, 1.0, 0.2, 0.2, 0.3, 0.3, 0.3, 40);
-        glColor3f(1.0, 0.2, 0.2);
-        cylinder(-3.68, 1.6, signZ, 0.28, 0.03, 16, 90, 0, 0, 0, 0, 0);
-    }
-
-    // === LIGHTING POLES ===
-    SetMaterial(0.25, 0.25, 0.25, 0.45, 0.45, 0.45, 0.3, 0.3, 0.3, 40);
-    glColor3f(0.4, 0.4, 0.4);
-
-    for (int i = 0; i < 5; i++)
-    {
-        double poleZ = 5 + i * 18;
-
-        // Left side poles
-        cylinder(-18, 3.5, poleZ, 0.12, 7.0, 12, 0, 0, 0, 0, 0, 0);
-        // Light fixtures
-        SetMaterial(0.9, 0.9, 0.8, 1.0, 1.0, 0.9, 0.8, 0.8, 0.8, 80);
-        glColor3f(1.0, 1.0, 0.9);
-        noTexCube(-18, 6.8, poleZ, 0.4, 0.2, 0.3, 0);
-
-        // Right side poles
-        SetMaterial(0.25, 0.25, 0.25, 0.45, 0.45, 0.45, 0.3, 0.3, 0.3, 40);
-        glColor3f(0.4, 0.4, 0.4);
-        cylinder(10, 3.5, poleZ, 0.12, 7.0, 12, 0, 0, 0, 0, 0, 0);
-        // Light fixtures
-        SetMaterial(0.9, 0.9, 0.8, 1.0, 1.0, 0.9, 0.8, 0.8, 0.8, 80);
-        glColor3f(1.0, 1.0, 0.9);
-        noTexCube(10, 6.8, poleZ, 0.4, 0.2, 0.3, 0);
-    }
-}
-
+// not used now
 // Function to draw a building with windows
 void drawStand(double x, double y, double z, double width, double height, double depth, unsigned int texture[])
 {
@@ -1181,10 +903,10 @@ void drawStand(double x, double y, double z, double width, double height, double
     }
 }
 
+// not used now
 // Draw trees
 void drawTree(double x, double y, double z, double scale, unsigned int texture[])
 {
-
     // Enable texture
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[4]);
@@ -1194,7 +916,7 @@ void drawTree(double x, double y, double z, double scale, unsigned int texture[]
                 2);               // Very low shininess
     glColor3f(0.4, 0.2, 0.1);     // Brown
 
-    // Draw a textured pillar/column
+    // Draw a textured bark cylinder
     cylinder(x, y + 0.3 * scale, z, 0.1 * scale, 0.6 * scale, 8, 0, 0, 0, 1, 1, 1);
 
     glDisable(GL_TEXTURE_2D);
@@ -1213,7 +935,6 @@ void drawTree(double x, double y, double z, double scale, unsigned int texture[]
     glPushMatrix();
     glTranslated(x, y + 0.7 * scale, z);
     glScaled(0.4 * scale, 0.4 * scale, 0.4 * scale);
-    // Leaf approximation using multiple cubes
     cube(0, 0, 0, 1, 1, 1, 0, 1, 1, 1);
     cube(0, 0.3, 0, 0.8, 0.8, 0.8, 0, 1, 1, 1);
     cube(0, -0.3, 0, 0.8, 0.8, 0.8, 0, 1, 1, 1);
@@ -1221,34 +942,7 @@ void drawTree(double x, double y, double z, double scale, unsigned int texture[]
     glDisable(GL_TEXTURE_2D);
 }
 
-// Draw a road section
-void drawRoad(double x, double y, double z, double width, double length, double rotation, unsigned int texture[])
-{
-    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
-
-    glPushMatrix();
-    glTranslated(x, y, z);
-    glRotated(rotation, 0, 1, 0);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[0]); // Asphalt texture
-
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(-width / 2, 0, -length / 2);
-    glTexCoord2f(width * 2, 0);
-    glVertex3f(width / 2, 0, -length / 2);
-    glTexCoord2f(width * 2, length * 2);
-    glVertex3f(width / 2, 0, length / 2);
-    glTexCoord2f(0, length * 2);
-    glVertex3f(-width / 2, 0, length / 2);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-}
-
+// not used now
 // Function to draw start/finish line
 void drawStartFinishLine()
 {
@@ -1283,65 +977,6 @@ void drawStartFinishLine()
     }
 }
 
-// Draw pit lane with markings
-void drawPitLane(double x, double y, double z, double width, double length, unsigned int texture[])
-{
-    // Main pit lane surface
-    SetMaterial(0.15, 0.15, 0.15, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 5);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(x - width / 2, y, z - length / 2);
-    glTexCoord2f(width * 2, 0);
-    glVertex3f(x + width / 2, y, z - length / 2);
-    glTexCoord2f(width * 2, length * 2);
-    glVertex3f(x + width / 2, y, z + length / 2);
-    glTexCoord2f(0, length * 2);
-    glVertex3f(x - width / 2, y, z + length / 2);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-
-    // Pit lane white lines
-    SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
-    glColor3f(1.0, 1.0, 1.0);
-
-    // Left line
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(x - width / 2, y + 0.01, z - length / 2);
-    glVertex3f(x - width / 2 + 0.1, y + 0.01, z - length / 2);
-    glVertex3f(x - width / 2 + 0.1, y + 0.01, z + length / 2);
-    glVertex3f(x - width / 2, y + 0.01, z + length / 2);
-    glEnd();
-
-    // Right line
-    glBegin(GL_QUADS);
-    glNormal3f(0, 1, 0);
-    glVertex3f(x + width / 2 - 0.1, y + 0.01, z - length / 2);
-    glVertex3f(x + width / 2, y + 0.01, z - length / 2);
-    glVertex3f(x + width / 2, y + 0.01, z + length / 2);
-    glVertex3f(x + width / 2 - 0.1, y + 0.01, z + length / 2);
-    glEnd();
-
-    // Speed limit markings (60 km/h)
-    for (int i = 0; i < 3; i++)
-    {
-        double markZ = z - length / 2 + length / 4 + i * length / 4;
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(x - 0.3, y + 0.01, markZ - 0.3);
-        glVertex3f(x + 0.3, y + 0.01, markZ - 0.3);
-        glVertex3f(x + 0.3, y + 0.01, markZ + 0.3);
-        glVertex3f(x - 0.3, y + 0.01, markZ + 0.3);
-        glEnd();
-    }
-}
-
 // Draw a road block with red and white curbs on edges and barricades
 void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures)
 {
@@ -1351,7 +986,7 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
 
     // Main road surface
     SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
-    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
+    glColor3f(1.0, 1.0, 1.0);
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]); // Asphalt texture
@@ -1420,11 +1055,11 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
     if (barricadeTextures != NULL && numBarricadeTextures > 0)
     {
         int barricadeCount = 0;
-        double barricadeOffset = width / 2 + 0.5; // Position barricades 0.5 units outside the road edge
+        double barricadeOffset = width / 2;
 
-        for (double zPos = -length / 2 + 0.5; zPos < length / 2; zPos += 1.0)
+        for (double zPos = -length / 2; zPos < length / 2; zPos += 1.0)
         {
-            int texIndex = (barricadeCount / 5) % numBarricadeTextures;
+            int texIndex = (barricadeCount / 10) % numBarricadeTextures;
 
             // Left side barricade (facing inward toward road)
             drawBarricade(-barricadeOffset, 0, zPos, 0, barricadeTextures[texIndex]);
@@ -1448,11 +1083,11 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
 
     double outerRadius = innerRadius + width;
     int segments = 16;                        // Number of segments for smooth curve
-    double angleStep = degreeTurn / segments; // 90 degree turn
+    double angleStep = degreeTurn / segments; // degree turn
 
-    // Main road surface - BRIGHTER material for better texture visibility
+    // Main road surface
     SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
-    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
+    glColor3f(1.0, 1.0, 1.0);
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
@@ -1526,6 +1161,7 @@ void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, do
     glPopMatrix();
 }
 
+// Draw a left turn road block with red and white curbs
 void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs)
 {
     glPushMatrix();
@@ -1536,10 +1172,9 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
     int segments = 16; // Number of segments for smooth curve
     double angleStep = degreeTurn / segments;
 
-    // Main road surface - BRIGHTER material for better texture visibility
+    // Main road surface
     SetMaterial(0.4, 0.4, 0.4, 0.7, 0.7, 0.7, 0.2, 0.2, 0.2, 10);
-    glColor3f(1.0, 1.0, 1.0); // White color to show texture properly
-
+    glColor3f(1.0, 1.0, 1.0);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
 
@@ -1551,13 +1186,13 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
         glBegin(GL_QUADS);
         glNormal3f(0, 1, 0);
         glTexCoord2f(0, (float)i / segments);
-        glVertex3f(innerRadius * cos(angle1), 0, -innerRadius * sin(angle1)); // Negated Z
+        glVertex3f(innerRadius * cos(angle1), 0, -innerRadius * sin(angle1));
         glTexCoord2f(1, (float)i / segments);
-        glVertex3f(outerRadius * cos(angle1), 0, -outerRadius * sin(angle1)); // Negated Z
+        glVertex3f(outerRadius * cos(angle1), 0, -outerRadius * sin(angle1));
         glTexCoord2f(1, (float)(i + 1) / segments);
-        glVertex3f(outerRadius * cos(angle2), 0, -outerRadius * sin(angle2)); // Negated Z
+        glVertex3f(outerRadius * cos(angle2), 0, -outerRadius * sin(angle2));
         glTexCoord2f(0, (float)(i + 1) / segments);
-        glVertex3f(innerRadius * cos(angle2), 0, -innerRadius * sin(angle2)); // Negated Z
+        glVertex3f(innerRadius * cos(angle2), 0, -innerRadius * sin(angle2));
         glEnd();
     }
 
@@ -1614,60 +1249,156 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
     glPopMatrix();
 }
 
-void drawCircuit(unsigned int roadTexture[], unsigned int barricadeTextures[], int numBarricadeTextures)
+// Draws the entire circuit scene, along with garages, pit fence, tire barriers, and grass areas
+void drawCircuit(unsigned int texture[], unsigned int barricadeTextures[], int numBarricadeTextures, float colors[][3])
 {
+
     // Draw light grey ground rectangle
     SetMaterial(0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.2, 0.2, 0.2, 10);
     glColor3f(0.6, 0.6, 0.6);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[1]); // Grass texture
 
     glPushMatrix();
     glTranslated(0, -0.01, 0); // Slightly below road level
     glBegin(GL_QUADS);
     glNormal3f(0, 1, 0);
-    glVertex3f(-100, 0, -100);
-    glVertex3f(100, 0, -100);
-    glVertex3f(100, 0, 100);
-    glVertex3f(-100, 0, 100);
+
+    glTexCoord2f(0, 0);
+    glVertex3f(-80, 0, -80);
+
+    glTexCoord2f(0, 40);
+    glVertex3f(80, 0, -80);
+
+    glTexCoord2f(40, 40);
+    glVertex3f(80, 0, 80);
+
+    glTexCoord2f(40, 0);
+    glVertex3f(-80, 0, 80);
     glEnd();
+    glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+
+    // Grass area beside the right side of the track
+    SetMaterial(0.1, 0.3, 0.1, 0.2, 0.5, 0.2, 0.05, 0.1, 0.05, 5);
+    glColor3f(0.2, 0.5, 0.2);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[2]); // Grass texture
+
+    // Right grass strip
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(0, 0);
+    glVertex3f(-3, -0.001, 0);
+    glTexCoord2f(0, 5);
+    glVertex3f(-3, -0.001, 11);
+    glTexCoord2f(40, 5);
+    glVertex3f(43, -0.001, 11);
+    glTexCoord2f(40, 0);
+    glVertex3f(43, -0.001, 00);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    // Five F1 garages
+    float garagePositions[5] = {
+        5,
+        12,
+        19,
+        26,
+        33};
+
+    for (int i = 0; i < 5; i++)
+    {
+        glPushMatrix();
+        glTranslated(garagePositions[i], 0, 14);
+        glRotated(180, 0, 1, 0);
+        glScalef(0.22, 0.22, 0.22);
+        drawF1Garage(0, 0, 0, 0.8, texture, colors);
+        glPopMatrix();
+    }
+
+    glPushMatrix();
+    glTranslatef(0, 0, 8);
+    glScalef(0.3, 0.3, 0.3);
+    drawTireBarrierRow(0, 0, 0, 60, 2);
+    glPopMatrix();
+
+    // Pit fence
+    SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 40);
+    glColor3f(0.4, 0.4, 0.4);
+
+    glPushMatrix();
+    glScaled(0.7, 0.7, 0.7);
+    for (int i = 0; i < 15; i++)
+    {
+        double fenceX = 0 + i * 4;
+        cylinder(fenceX, 0, 7, 0.05, 3.0, 8, 0, 0, 0, 0, 0, 0);
+    }
+
+    // Horizontal fence bars
+    glLineWidth(2.0);
+    glBegin(GL_LINES);
+    for (int j = 0; j < 6; j++)
+    {
+        double barY = 0.3 + j * 0.2;
+        glVertex3f(0, barY, 7);
+        glVertex3f(56, barY, 7);
+    }
+    glEnd();
+    glLineWidth(1.0); // Reset to default
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(20, 0, 0);
     // Race start/finish straight
-    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 90, roadTexture, 1, barricadeTextures, 3);
+    drawRoadBlockWithCurbs(0, 0, 0, 4, 35, 90, texture, 0, barricadeTextures, 3);
+
+    // pit road
+    drawRoadBlockWithCurbs(0, 0, 10, 2.5, 35, 90, texture, 0, barricadeTextures, 0);
+    drawRoadBlockRightTurn(17.5, 0, 16.25, 5, 2.5, 90, 90, texture, 0);
 
     // 1st right turn
-    drawRoadBlockRightTurn(17.5, 0, 7, 5, 4, 90, 90, roadTexture, 1);
+    drawRoadBlockRightTurn(17.5, 0, 7, 5, 4, 90, 90, texture, 1);
 
     // Right straight
-    drawRoadBlockWithCurbs(24.5, 0, 24, 4, 35, 0, roadTexture, 1, barricadeTextures, 3);
+    drawRoadBlockWithCurbs(24.5, 0, 24, 4, 35, 0, texture, 1, barricadeTextures, 0);
 
     // 2nd right turn, 130 degrees
     glPushMatrix();
     glTranslated(17.5, 0, 41.5);
     glRotated(-60, 0, 1, 0);
-    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 60, 130, roadTexture, 1);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 60, 130, texture, 1);
     glPopMatrix();
 
     // Angled straight
-    drawRoadBlockWithCurbs(0, 0, 35.9, 4, 35, 50, roadTexture, 1, barricadeTextures, 3);
+    drawRoadBlockWithCurbs(0, 0, 35.9, 4, 35, 50, texture, 0, barricadeTextures, 3);
 
     glPopMatrix();
 
     // angled end
-    drawRoadBlockWithCurbs(4.5, 0, 23, 4, 18, 50, roadTexture, 0, barricadeTextures, 3);
+    drawRoadBlockWithCurbs(4.5, 0, 23, 4, 18, 50, texture, 0, barricadeTextures, 0);
 
     glPushMatrix();
     glTranslated(2.5, 0, 7);
     glRotated(180, 0, 1, 0);
-    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 0, 90, roadTexture, 1);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 4, 0, 90, texture, 1);
     glPopMatrix();
 
-    drawRoadBlockWithCurbs(-4.5, 0, 9.8, 4, 6, 0, roadTexture, 1, barricadeTextures, 3);
+    // pit road
+    glPushMatrix();
+    glTranslated(2.5, 0, 16.25);
+    glRotated(180, 0, 1, 0);
+    drawRoadBlockRightTurn(0, 0, 0, 5, 2.5, 0, 90, texture, 0);
+    glPopMatrix();
+
+    drawRoadBlockWithCurbs(-4.5, 0, 9.8, 4, 6, 0, texture, 0, barricadeTextures, 0);
 
     glPushMatrix();
     glTranslated(2.5, 0, 12.2);
-    drawRoadBlockLeftTurn(0, 0, 0, 5, 4, 180, 50, roadTexture, 0);
+    drawRoadBlockLeftTurn(0, 0, 0, 5, 4, 180, 50, texture, 0);
     glPopMatrix();
 }
 
@@ -1681,7 +1412,7 @@ void drawBarricade(double x, double y, double z, double rotation, unsigned int t
 
     glPushMatrix();
     glTranslated(0, 1.5, 0);
-    // Light grey shiny material for posts
+    // Light grey posts
     SetMaterial(0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.9, 0.9, 0.9, 80);
     glColor3f(0.7, 0.7, 0.7);
 
@@ -1719,14 +1450,14 @@ void drawBarricade(double x, double y, double z, double rotation, unsigned int t
 
     glPopMatrix();
 
-    // Sign/board with texture - higher diffuse
+    // Sign/board with texture
     SetMaterial(0.5, 0.5, 0.5, 0.9, 0.9, 0.9, 0.3, 0.3, 0.3, 20);
     glPushMatrix();
     glTranslated(0, -0.75, 1.5);
     rectangleTex(0, 0, 0, 3, 1.5, 0, 90, 0, texture, 1);
     glPopMatrix();
 
-    // Wires between posts - light grey shiny material
+    // Wires between posts
     SetMaterial(0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.9, 0.9, 0.9, 80);
     glColor3f(0.7, 0.7, 0.7);
     glLineWidth(1.8);
@@ -1745,4 +1476,63 @@ void drawBarricade(double x, double y, double z, double rotation, unsigned int t
     glLineWidth(1.0);
     glPopMatrix();
     glPopMatrix();
+}
+
+void drawFrameBox()
+{
+    glPushMatrix();
+    glTranslatef(0, 0.5, 0);
+    // vertical supports
+    cylinder(0, 0, 1, 0.05, 1.1, 4, 0, 0, 0, 0, 0, 0);
+    cylinder(0, 0, 0, 0.05, 1.1, 4, 0, 0, 0, 0, 0, 0);
+    cylinder(1, 0, 0, 0.05, 1.1, 4, 0, 0, 0, 0, 0, 0);
+    cylinder(1, 0, 1, 0.05, 1.1, 4, 0, 0, 0, 0, 0, 0);
+    // horizontal top connectors
+    cylinder(0.5, 0.5, 1, 0.05, 1, 4, 0, 0, 90, 0, 0, 0);
+    cylinder(0, 0.5, 0.5, 0.05, 1, 4, 90, 0, 0, 0, 0, 0);
+    cylinder(0.5, 0.5, 0, 0.05, 1, 4, 0, 0, 90, 0, 0, 0);
+    cylinder(1, 0.5, 0.5, 0.05, 1, 4, 90, 0, 0, 0, 0, 0);
+    // diagonal connectors
+    cylinder(0, 0, 0.5, 0.05, 1.42, 4, 45, 0, 0, 0, 0, 0);
+    cylinder(0, 0, 0.5, 0.05, 1.42, 4, -45, 0, 0, 0, 0, 0);
+    cylinder(1, 0, 0.5, 0.05, 1.42, 4, 45, 0, 0, 0, 0, 0);
+    cylinder(1, 0, 0.5, 0.05, 1.42, 4, -45, 0, 0, 0, 0, 0);
+    // horizontal bottom connectors
+    cylinder(0.5, -0.5, 1, 0.05, 1, 4, 0, 0, 90, 0, 0, 0);
+    cylinder(0, -0.5, 0.5, 0.05, 1, 4, 90, 0, 0, 0, 0, 0);
+    cylinder(0.5, -0.5, 0, 0.05, 1, 4, 0, 0, 90, 0, 0, 0);
+    cylinder(1, -0.5, 0.5, 0.05, 1, 4, 90, 0, 0, 0, 0, 0);
+    glPopMatrix();
+}
+// To draw a support banner of given height and width using frame boxes
+void drawSupportBanner(float height, float width, float boxUnit)
+{
+    SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 40);
+    glColor3f(0.4, 0.4, 0.4);
+    // vertical sides
+    for (float i = 0; i < height; i += boxUnit)
+    {
+        glPushMatrix();
+        glTranslatef(0, i, 0);
+        glScalef(boxUnit, boxUnit, boxUnit);
+        drawFrameBox();
+        glPopMatrix();
+    }
+    for (float i = 0; i < height; i += boxUnit)
+    {
+        glPushMatrix();
+        glTranslatef(0, i, width);
+        glScalef(boxUnit, boxUnit, boxUnit);
+        drawFrameBox();
+        glPopMatrix();
+    }
+    // horizontal top
+    for (float i = 0; i <= width; i += boxUnit)
+    {
+        glPushMatrix();
+        glTranslatef(0, height, i);
+        glScalef(boxUnit, boxUnit, boxUnit);
+        drawFrameBox();
+        glPopMatrix();
+    }
 }

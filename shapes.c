@@ -93,7 +93,7 @@ void cube(double x, double y, double z,
 }
 
 /*
- * Draw a torus (or partial torus)
+ * Draw a torus
  * centerX, centerY, centerZ - position
  * majorRadius - distance from center to tube center
  * minorRadius - tube radius
@@ -154,7 +154,7 @@ void drawTorus(double centerX, double centerY, double centerZ,
       glEnd();
    }
 
-   // === OPTIONAL: Draw end caps if not a full circle ===
+   // Draw end caps if not a full circle
    if (fabs(angleRange - 2.0 * M_PI) > 0.01) // Not a full torus
    {
       // Start cap at startAngle
@@ -190,7 +190,6 @@ void drawTorus(double centerX, double centerY, double centerZ,
 }
 
 // Draws a cube centered at (x, y, z) with scaling and rotation
-// No texture binding or texture coordinates
 void noTexCube(double x, double y, double z,
                double dx, double dy, double dz,
                double th)
@@ -205,42 +204,42 @@ void noTexCube(double x, double y, double z,
    // Begin drawing faces
    glBegin(GL_QUADS);
 
-   // --- Front (+Z)
+   // Front (+Z)
    glNormal3f(0, 0, 1);
    glVertex3f(-1, -1, 1);
    glVertex3f(+1, -1, 1);
    glVertex3f(+1, +1, 1);
    glVertex3f(-1, +1, 1);
 
-   // --- Back (-Z)
+   // Back (-Z)
    glNormal3f(0, 0, -1);
    glVertex3f(+1, -1, -1);
    glVertex3f(-1, -1, -1);
    glVertex3f(-1, +1, -1);
    glVertex3f(+1, +1, -1);
 
-   // --- Right (+X)
+   // Right (+X)
    glNormal3f(+1, 0, 0);
    glVertex3f(+1, -1, +1);
    glVertex3f(+1, -1, -1);
    glVertex3f(+1, +1, -1);
    glVertex3f(+1, +1, +1);
 
-   // --- Left (-X)
+   // Left (-X)
    glNormal3f(-1, 0, 0);
    glVertex3f(-1, -1, -1);
    glVertex3f(-1, -1, +1);
    glVertex3f(-1, +1, +1);
    glVertex3f(-1, +1, -1);
 
-   // --- Top (+Y)
+   // Top (+Y)
    glNormal3f(0, +1, 0);
    glVertex3f(-1, +1, +1);
    glVertex3f(+1, +1, +1);
    glVertex3f(+1, +1, -1);
    glVertex3f(-1, +1, -1);
 
-   // --- Bottom (-Y)
+   // Bottom (-Y)
    glNormal3f(0, -1, 0);
    glVertex3f(-1, -1, -1);
    glVertex3f(+1, -1, -1);
@@ -278,7 +277,7 @@ void trapezoid(double x, double y, double z,
    // Draw
    glBegin(GL_QUADS);
 
-   // --- Front (+Z)
+   // Front (+Z)
    {
       double nx = 0;
       double ny = (bz - tz);
@@ -291,7 +290,7 @@ void trapezoid(double x, double y, double z,
    glVertex3f(tx, h, tz);
    glVertex3f(-tx, h, tz);
 
-   // --- Back (-Z)
+   // Back (-Z)
    {
       double nx = 0;
       double ny = (bz - tz);
@@ -304,7 +303,7 @@ void trapezoid(double x, double y, double z,
    glVertex3f(-tx, h, -tz);
    glVertex3f(tx, h, -tz);
 
-   // --- Right (+X)
+   // Right (+X)
    {
       double nx = 2.0;
       double ny = (bx - tx);
@@ -317,7 +316,7 @@ void trapezoid(double x, double y, double z,
    glVertex3f(tx, h, -tz);
    glVertex3f(tx, h, tz);
 
-   // --- Left (-X)
+   // Left (-X)
    {
       double nx = -2.0;
       double ny = (bx - tx);
@@ -330,14 +329,14 @@ void trapezoid(double x, double y, double z,
    glVertex3f(-tx, h, tz);
    glVertex3f(-tx, h, -tz);
 
-   // --- Top face
+   // Top face
    glNormal3f(0, 1, 0);
    glVertex3f(-tx, h, tz);
    glVertex3f(tx, h, tz);
    glVertex3f(tx, h, -tz);
    glVertex3f(-tx, h, -tz);
 
-   // --- Bottom face
+   // Bottom face
    glNormal3f(0, -1, 0);
    glVertex3f(-bx, 0, -bz);
    glVertex3f(bx, 0, -bz);

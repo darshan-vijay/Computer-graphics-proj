@@ -1,5 +1,5 @@
 # Example 35
-EXE=f1
+EXE=final
 
 # Main target
 all: $(EXE)
@@ -24,7 +24,7 @@ CLEAN=rm -f $(EXE) *.o *.a
 endif
 
 # Dependencies
-f1.o: f1.c CSCIx229.h
+final.o: final.c CSCIx229.h
 fatal.o: fatal.c CSCIx229.h
 errcheck.o: errcheck.c CSCIx229.h
 print.o: print.c CSCIx229.h
@@ -46,7 +46,7 @@ CSCIx229.a:fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o shapes
 	g++ -c $(CFLG)  $<
 
 #  Link
-f1:f1.o   CSCIx229.a
+final:final.o   CSCIx229.a
 	gcc $(CFLG) -o $@ $^  $(LIBS)
 
 #  Clean

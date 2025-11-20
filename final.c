@@ -1,17 +1,16 @@
 /*
- *  HW 5 Textures
+ *   Project F1 Racing Circuit
  *
- *  F1 Cars
+ *  F1 Racing Circuit
  *
  *  Key bindings:
- *  m/M        Cycle through different modes
  *  p/P        Cycle through different Perspectives
  *  w/a/s/d    Move POV/Drive car (in POV mode)
+ *  m/M        Cycle through different display modes
  *  q          Toggle axes
- *  arrows     Change view angle
+ *  arrows     Change view angle in perspective mode
  *  0          Reset view angle
  *  ESC        Exit
- *  p/P        Cycle through different perspectives
  *  [          Lower light
  *  ]          Higher light
  *  l,L        Toggle light
@@ -27,56 +26,63 @@ int mode = 0;        //  What to display
 int perspective = 0; // Perspective
 int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
-double dim = 4;      //  Size of world
+double dim = 12;     //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
+// Colors in order: Body, Fins, Halo
+// Ferrari
 float ferrariColors[3][3] = {
-    {0.8, 0.1, 0.1},    // Body: Ferrari Red
-    {0.05, 0.05, 0.05}, // Fins: Black
-    {0.7, 0.7, 0.75}    // Halo: Silver
-};
+    {0.9, 0.0, 0.0}, // Bright Ferrari Red
+    {0.0, 0.0, 0.0}, // Black
+    {0.0, 0.0, 0.0}};
 
+// McLaren
 float mclarenColors[3][3] = {
-    {1.0, 0.45, 0.0},  // Body: Papaya Orange
-    {0.0, 0.35, 0.65}, // Fins: McLaren Blue
-    {0.7, 0.7, 0.75}   // Halo: Silver
-};
+    {1.0, 0.5, 0.0},  // Vibrant Orange
+    {0.0, 0.4, 0.75}, // McLaren Blue
+    {0.0, 0.4, 0.75}};
 
+// Mercedes
 float mercedesColors[3][3] = {
-    {0.0, 0.8, 0.7},    // Body: Mercedes Teal/Turquoise
-    {0.05, 0.05, 0.05}, // Fins: Black
-    {0.7, 0.7, 0.75}    // Halo: Silver
-};
+    {0.0, 0.85, 0.75},  // Petronas Teal
+    {0.05, 0.05, 0.05}, // Black
+    {0.05, 0.05, 0.05}};
 
+// Red Bull Racing
 float redBullColors[3][3] = {
-    {0.0, 0.1, 0.4},  // Body: Navy Blue
-    {1.0, 0.85, 0.0}, // Fins: Red Bull Yellow
-    {0.7, 0.7, 0.75}  // Halo: Silver
+    {0.0, 0.15, 0.45}, // Deep Navy Blue
+    {1.0, 0.9, 0.0},   // Bright Yellow
+    {1.0, 0.9, 0.0}};
+
+// Aston Martin
+float astonMartinColors[3][3] = {
+    {0.0, 0.35, 0.25}, // Deep British Racing Green
+    {0.0, 0.8, 0.4},   // Bright Lime Green accent
+    {0.9, 0.75, 0.3}   // Gold
 };
 
 // McLaren car position and physics
 double mclarenX = 4.0;
 double mclarenY = 0.0;
-double mclarenZ = 0.5;
+double mclarenZ = 1;
 double carHeading = 0.0;     // Actual direction car is facing (for movement)
 double carVelocity = 0.1;    // Current forward velocity
 double maxVelocity = 0.3;    // Maximum velocity
 double acceleration = 0.06;  // Acceleration rate
-double deceleration = 0.005; // Deceleration/friction
+double deceleration = 0.008; // Deceleration/friction
 double turnSpeed = 2.5;      // Degrees per key press
 
 // Steering and braking
 double steeringAngle = 0.0; // Current steering angle for front wheels
 int isBraking = 0;          // Brake light state
 
-double povX = 3;    // POV X
+double povX = 2;    // POV X
 double povY = 0.45; // POV Y
 double povZ = 0.5;  // POV Z
 
 void updatePOVPosition()
 {
-   // Calculate camera position behind the car based on heading
    // Camera is positioned behind the car's current heading
    double radHeading = (90.0 + carHeading) * M_PI / 180.0;
    double offsetDistance = 2.0; // Distance behind car
@@ -162,9 +168,6 @@ void display()
       glEnable(GL_LIGHTING);
       //  Location of viewer for specular calculations
       glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, local);
-      //  glColor sets ambient and diffuse color materials
-      glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-      glEnable(GL_COLOR_MATERIAL);
       //  Enable light 0
       glEnable(GL_LIGHT0);
       //  Set ambient, diffuse, specular components and position of light 0
@@ -181,56 +184,86 @@ void display()
    {
    case 0:
 
+      // Support banner
       glPushMatrix();
-      glTranslated(2, 0, 8);
-      glScaled(0.2, 0.2, 0.2);
-      glRotated(90, 0, 1, 0);
-      drawPitComplex(texture, ferrariColors);
+      glTranslated(12, 0, -3);
+      drawSupportBanner(3, 5.5, 0.5);
       glPopMatrix();
 
-      glDisable(GL_COLOR_MATERIAL);
-      drawCircuit(texture, barricadeTexture, sizeof(barricadeTexture) / sizeof(barricadeTexture[0]));
-
+      // Circuit with barricades
       glPushMatrix();
-      glTranslated(6, 0, -0.5);
+      glTranslated(-15, 0, 0);
+      drawCircuit(texture, barricadeTexture, sizeof(barricadeTexture) / sizeof(barricadeTexture[0]), ferrariColors);
+      glPopMatrix();
+
+      // start marking 1
+      glPushMatrix();
+      glTranslated(6, 0, -1);
+      squareBracketMarking();
+      glPopMatrix();
+      // car1
+      glPushMatrix();
+      glTranslated(6, 0, -1);
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       glPopMatrix();
 
-      // McLaren car - always rotated to show heading
+      // start marking 2
+      glPushMatrix();
+      glTranslated(4, 0, 1);
+      squareBracketMarking();
+      glPopMatrix();
+
+      // McLaren car - moving car
       glPushMatrix();
       glTranslated(mclarenX, mclarenY, mclarenZ);
-      glRotated(carHeading, 0, 1, 0); // Always show car pointing in heading direction
+      glRotated(carHeading, 0, 1, 0); // heading direction
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking);
       glPopMatrix();
 
+      // start marking 3
       glPushMatrix();
-      glTranslated(2, 0, -0.5);
+      glTranslated(2, 0, -1);
+      squareBracketMarking();
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslated(2, 0, -1);
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, mercedesColors, 0, 0);
       glPopMatrix();
 
+      // start marking 4
       glPushMatrix();
-      glTranslated(0, 0, 0.5);
+      glTranslated(0, 0, 1);
+      squareBracketMarking();
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslated(0, 0, 1);
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, redBullColors, 0, 0);
       glPopMatrix();
 
-      glEnable(GL_COLOR_MATERIAL);
+      // start marking 5
+      glPushMatrix();
+      glTranslated(-2, 0, -1);
+      squareBracketMarking();
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslated(-2, 0, -1);
+      glScaled(0.2, 0.2, 0.2);
+      drawF1Car(1, 1, 1, texture, astonMartinColors, 0, 0);
+      glPopMatrix();
+
       break;
    case 1:
-      glDisable(GL_COLOR_MATERIAL);
-      drawF1Garage(0, 0, 0, 1, texture, ferrariColors);
-      glEnable(GL_COLOR_MATERIAL);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       break;
    case 2:
-      drawPitComplex(texture, ferrariColors);
-      break;
-   case 3:
-      glDisable(GL_COLOR_MATERIAL);
-      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
-      glEnable(GL_COLOR_MATERIAL);
+      drawF1Garage(0, 0, 0, 1, texture, ferrariColors);
       break;
    }
    //  Draw axes - no lighting
@@ -275,7 +308,7 @@ void idle()
    zh = fmod(90 * t, 360.0);
 
    // Apply velocity and friction
-   if (carVelocity > 0)
+   if (carVelocity >= 0)
    {
       carVelocity -= deceleration;
       if (carVelocity < 0)
@@ -284,21 +317,19 @@ void idle()
    }
    else if (carVelocity < 0)
    {
-      carVelocity += deceleration;
-      if (carVelocity > 0)
-         carVelocity = 0;
+      carVelocity = 0;
    }
 
    // Gradually return steering to center
    if (steeringAngle > 0)
    {
-      steeringAngle -= 2.0;
+      steeringAngle -= 0.5;
       if (steeringAngle < 0)
          steeringAngle = 0;
    }
    else if (steeringAngle < 0)
    {
-      steeringAngle += 2.0;
+      steeringAngle += 0.5;
       if (steeringAngle > 0)
          steeringAngle = 0;
    }
@@ -367,7 +398,7 @@ void key(unsigned char ch, int x, int y)
    else if (ch == '0')
    {
       th = -50;
-      ph = 25;
+      ph = 15;
    }
    //  Cycle through different modes
    else if (ch == 'm' || ch == 'M')
@@ -375,10 +406,10 @@ void key(unsigned char ch, int x, int y)
       mode = (mode + 1) % 4;
 
       // Adjust viewing distance based on mode
-      if (mode == 2) // Pit complex needs larger view
+      if (mode == 0 || mode == 1) // Full scene
          dim = 12;
-      else // Other modes are smaller
-         dim = 10;
+      else
+         dim = 4;
    }
    //  Cycle through different perspectives
    else if (ch == 'p' || ch == 'P')
@@ -402,14 +433,14 @@ void key(unsigned char ch, int x, int y)
          carVelocity += acceleration;
          if (carVelocity > maxVelocity)
             carVelocity = maxVelocity;
-         isBraking = 0; // Not braking
+         isBraking = 0;
       }
       else if (ch == 's' || ch == 'S') // Backward with acceleration
       {
          carVelocity -= acceleration;
          if (carVelocity < -maxVelocity * 0.5)
             carVelocity = -maxVelocity * 0.5;
-         isBraking = 1; // Braking!
+         isBraking = 1; // Braking
       }
       else if (ch == 'a' || ch == 'A') // Turn left
       {
@@ -447,7 +478,7 @@ int main(int argc, char *argv[])
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
    //  Create the window
-   glutCreateWindow("hw6 darshan vijayaraghavan");
+   glutCreateWindow("Project darshan vijayaraghavan");
 
    texture[0] = LoadTexBMP("asphalt.bmp");    // Track texture
    texture[1] = LoadTexBMP("concrete.bmp");   // Building texture
