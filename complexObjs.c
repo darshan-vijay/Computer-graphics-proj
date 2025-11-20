@@ -714,7 +714,6 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
 
     // THE F1 CAR
     glPushMatrix();
-    glTranslated(0, 0.22, 0);
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
     drawF1Car(1, 1, 1, texture, colors, 0, 0);
     glPopMatrix();

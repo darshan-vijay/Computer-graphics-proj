@@ -19,14 +19,14 @@
 
 #include "CSCIx229.h"
 
-int th = 115;        //  Azimuth of view angle
+int th = 105;        //  Azimuth of view angle
 int ph = 20;         //  Elevation of view angle
 int axes = 1;        //  Display axes
 int mode = 0;        //  What to display
 int perspective = 0; // Perspective
 int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
-double dim = 12;     //  Size of world
+double dim = 8;      //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
@@ -260,10 +260,11 @@ void display()
 
       break;
    case 1:
-      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
-      break;
-   case 2:
       drawF1Garage(0, 0, 0, 1, texture, ferrariColors);
+      break;
+
+   case 2:
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       break;
    }
    //  Draw axes - no lighting
@@ -317,7 +318,9 @@ void idle()
    }
    else if (carVelocity < 0)
    {
-      carVelocity = 0;
+      carVelocity += deceleration;
+      if (carVelocity > 0)
+         carVelocity = 0;
    }
 
    // Gradually return steering to center
@@ -403,13 +406,25 @@ void key(unsigned char ch, int x, int y)
    //  Cycle through different modes
    else if (ch == 'm' || ch == 'M')
    {
-      mode = (mode + 1) % 4;
+      mode = (mode + 1) % 3;
 
       // Adjust viewing distance based on mode
-      if (mode == 0 || mode == 1) // Full scene
-         dim = 12;
+      if (mode == 0)
+      {
+         dim = 8;
+      }
+      else if (mode == 1)
+      {
+         dim = 10;
+         th = -25;
+         ph = 10;
+      }
       else
+      {
          dim = 4;
+         th = -125;
+         ph = 15;
+      }
    }
    //  Cycle through different perspectives
    else if (ch == 'p' || ch == 'P')
@@ -456,6 +471,10 @@ void key(unsigned char ch, int x, int y)
             carHeading += 360;
          steeringAngle = 25.0; // Turn wheels right
       }
+   }
+   else
+   {
+      perspective = 0; // Force perspective if not in circuit mode
    }
 
    // Handle axes toggle
