@@ -46,7 +46,7 @@ float fogIntensity = 0.04f;
 int dayNightMode = 0; // 0 = day, 1 = night
 const char *textDayNight[] = {"Day", "Night"};
 GLuint nightSky[6]; // Night skybox textures
-GLuint mornSky[6];
+GLuint mornSky[6];  // Morning skybox textures
 
 typedef struct
 {
@@ -92,12 +92,14 @@ float astonMartinColors[3][3] = {
 double mclarenX = 4.0;
 double mclarenY = 0.0;
 double mclarenZ = 1;
-double carHeading = 0.0;     // Actual direction car is facing (for movement)
-double carVelocity = 0.1;    // Current forward velocity
-double maxVelocity = 0.3;    // Maximum velocity
-double acceleration = 0.06;  // Acceleration rate
+
+double carHeading = 0.0;   // Actual direction car is facing (for movement)
+double carVelocity = 0.0;  // Current forward velocity
+double maxVelocity = 0.15; // Maximum velocity
+
+double acceleration = 0.02;  // Acceleration rate
 double deceleration = 0.008; // Deceleration/friction
-double turnSpeed = 2.5;      // Degrees per key press
+double turnSpeed = 0.8;      // Degrees per key press
 
 // Steering and braking
 double steeringAngle = 0.0; // Current steering angle for front wheels
@@ -341,13 +343,6 @@ void display(SDL_Window *window)
 {
    //  Erase the window and the depth buffer
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-   // Set background color based on day/night
-   // if (dayNightMode == 0)
-   //    glClearColor(0.53, 0.81, 0.98, 1.0); // Light sky blue for day
-   // else
-   //    glClearColor(0.05, 0.05, 0.1, 1.0); // Dark blue for night
-
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
    //  Undo previous
@@ -569,33 +564,94 @@ void update()
    if (rainTime > 1000.0)
       rainTime = 0.0;
 
-   // Apply velocity and friction
+   // Get keyboard state for smooth controls
+   const Uint8 *keys = SDL_GetKeyboardState(NULL);
+
+   // Handle car driving in POV mode - check EVERY frame
+   if (perspective == 1 && mode == 0)
+   {
+      int isAccelerating = 0;
+      int isTurning = 0;
+      if (keys[SDL_SCANCODE_SPACE]) // Forward with acceleration
+      {
+         deceleration = 0.021;
+         isBraking = 1;
+      }
+      else
+      {
+         deceleration = 0.008;
+         isBraking = 0;
+      }
+      if (keys[SDL_SCANCODE_W]) // Forward with acceleration
+      {
+         carVelocity += acceleration;
+         if (carVelocity > maxVelocity)
+            carVelocity = maxVelocity;
+         isAccelerating = 1;
+      }
+      if (keys[SDL_SCANCODE_S]) // Backward with acceleration
+      {
+         carVelocity -= acceleration;
+         if (carVelocity < -maxVelocity * 0.5)
+            carVelocity = -maxVelocity * 0.5;
+         isBraking = 1;
+         isAccelerating = 1;
+      }
+
+      // Steering - check if moving or has velocity
+      if (keys[SDL_SCANCODE_A]) // Turn left
+      {
+         steeringAngle = -25.0;
+         if (isAccelerating || fabs(carVelocity) > 0.01)
+         {
+            carHeading += turnSpeed;
+            if (carHeading >= 360)
+               carHeading -= 360;
+            isTurning = 1;
+         }
+      }
+      else if (keys[SDL_SCANCODE_D]) // Turn right
+      {
+         steeringAngle = 25.0;
+         if (isAccelerating || fabs(carVelocity) > 0.01)
+         {
+            carHeading -= turnSpeed;
+            if (carHeading < 0)
+               carHeading += 360;
+            isTurning = 1;
+         }
+      }
+
+      // If not turning, gradually return steering to center
+      if (!isTurning)
+      {
+         if (steeringAngle > 0)
+         {
+            steeringAngle -= 0.5;
+            if (steeringAngle < 0)
+               steeringAngle = 0;
+         }
+         else if (steeringAngle < 0)
+         {
+            steeringAngle += 0.5;
+            if (steeringAngle > 0)
+               steeringAngle = 0;
+         }
+      }
+   }
+
+   // Apply friction when not accelerating
    if (carVelocity >= 0)
    {
       carVelocity -= deceleration;
       if (carVelocity < 0)
          carVelocity = 0;
-      isBraking = 0;
    }
    else if (carVelocity < 0)
    {
       carVelocity += deceleration;
       if (carVelocity > 0)
          carVelocity = 0;
-   }
-
-   // Gradually return steering to center
-   if (steeringAngle > 0)
-   {
-      steeringAngle -= 0.5;
-      if (steeringAngle < 0)
-         steeringAngle = 0;
-   }
-   else if (steeringAngle < 0)
-   {
-      steeringAngle += 0.5;
-      if (steeringAngle > 0)
-         steeringAngle = 0;
    }
 
    // Update car position based on velocity
@@ -617,7 +673,6 @@ void update()
 int key()
 {
    const Uint8 *keys = SDL_GetKeyboardState(NULL);
-   int shift = SDL_GetModState() & KMOD_SHIFT;
 
    //  Exit on ESC
    if (keys[SDL_SCANCODE_ESCAPE])
@@ -638,12 +693,8 @@ int key()
    else if (keys[SDL_SCANCODE_M])
    {
       mode = (mode + 1) % 3;
-
-      // Adjust viewing distance based on mode
       if (mode == 0)
-      {
          dim = 6;
-      }
       else if (mode == 1)
       {
          dim = 10;
@@ -676,11 +727,6 @@ int key()
       th += 5;
    else if (keys[SDL_SCANCODE_LEFT])
       th -= 5;
-   // //  Increase/decrease elevation
-   // else if (keys[SDL_SCANCODE_UP])
-   //    ph += 5;
-   // else if (keys[SDL_SCANCODE_DOWN])
-   //    ph -= 5;
    //  PageUp key - increase dim
    else if (keys[SDL_SCANCODE_F1])
       dim += 0.1;
@@ -693,49 +739,11 @@ int key()
 
    th %= 360;
 
-   // Handle car driving in POV mode
-   if (perspective == 1 && mode == 0)
-   {
-      if (keys[SDL_SCANCODE_W]) // Forward with acceleration
-      {
-         carVelocity += acceleration;
-         if (carVelocity > maxVelocity)
-            carVelocity = maxVelocity;
-         isBraking = 0;
-      }
-      if (keys[SDL_SCANCODE_S]) // Backward with acceleration
-      {
-         carVelocity -= acceleration;
-         if (carVelocity < -maxVelocity * 0.5)
-            carVelocity = -maxVelocity * 0.5;
-         isBraking = 1; // Braking
-      }
-      if (keys[SDL_SCANCODE_A]) // Turn left
-      {
-         carHeading += turnSpeed;
-         if (carHeading >= 360)
-            carHeading -= 360;
-         steeringAngle = -25.0; // Turn wheels left
-      }
-      if (keys[SDL_SCANCODE_D]) // Turn right
-      {
-         carHeading -= turnSpeed;
-         if (carHeading < 0)
-            carHeading += 360;
-         steeringAngle = 25.0; // Turn wheels right
-      }
-   }
-   else
-   {
-      perspective = 0; // Force perspective if not in circuit mode
-   }
-
    //  Update projection
    Project(perspective, fov, asp, dim);
    //  Return 1 to keep running
    return 1;
 }
-
 /*
  *  Start up GLUT and tell it what to do
  */
