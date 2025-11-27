@@ -18,6 +18,7 @@
  */
 
 #include "CSCIx229.h"
+#include <time.h>
 
 int th = 105;        //  Azimuth of view angle
 int ph = 20;         //  Elevation of view angle
@@ -29,6 +30,22 @@ double asp = 1;      //  Aspect ratio
 double dim = 8;      //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
+
+int numRainDrops = 5000;
+
+unsigned int rainVBO = 0;
+int rainShader = 0;
+
+float rainTime = 0.0f;
+int useRain = 1;
+
+typedef struct
+{
+   float offsetX;
+   float offsetZ;
+   float speed;
+   float length;
+} Drop;
 
 // Colors in order: Body, Fins, Halo
 // Ferrari
@@ -114,6 +131,75 @@ void reshape(int width, int height)
    glViewport(0, 0, width, height);
    //  Set projection
    Project(perspective, fov, asp, dim);
+}
+
+void setupRain()
+{
+   float rainArea = 40.0f;
+   Drop *drops = malloc(numRainDrops * sizeof(Drop));
+
+   srand(time(NULL));
+
+   for (int i = 0; i < numRainDrops; i++)
+   {
+      drops[i].offsetX = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
+      drops[i].offsetZ = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
+      drops[i].speed = 8.0f + ((float)rand() / RAND_MAX) * 8.0f;
+      drops[i].length = 0.1f + ((float)rand() / RAND_MAX) * 0.4f;
+   }
+
+   glGenBuffers(1, &rainVBO);
+   glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
+   glBufferData(GL_ARRAY_BUFFER,
+                numRainDrops * sizeof(Drop),
+                drops,
+                GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   free(drops);
+}
+
+void renderRain()
+{
+   if (!useRain)
+      return;
+
+   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+   glEnable(GL_POINT_SMOOTH);
+   glPointSize(2.0f); // fallback only
+
+   glUseProgram(rainShader);
+
+   glUniform1f(glGetUniformLocation(rainShader, "uTime"), rainTime);
+   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 20.0f);
+
+   glDisable(GL_LIGHTING);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
+
+   glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
+
+   // Attribute 0: vec4 (offsetX, offsetZ, speed, height)
+   glEnableVertexAttribArray(0);
+   glVertexAttribPointer(
+       0,            // attribute index
+       4,            // size
+       GL_FLOAT,     // type
+       GL_FALSE,     // normalize?
+       sizeof(Drop), // stride
+       (void *)0     // offset
+   );
+
+   // Draw points that become streaks in shader
+   glDrawArrays(GL_POINTS, 0, numRainDrops);
+
+   glDisableVertexAttribArray(0);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+   glDepthMask(GL_TRUE);
+   glUseProgram(0);
 }
 
 /*
@@ -267,6 +353,7 @@ void display()
       drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       break;
    }
+   renderRain();
    //  Draw axes - no lighting
    glDisable(GL_LIGHTING);
    glColor3f(1, 1, 1);
@@ -307,6 +394,10 @@ void idle()
    //  Elapsed time in seconds
    double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
    zh = fmod(90 * t, 360.0);
+
+   rainTime += 0.05;
+   if (rainTime > 1000.0)
+      rainTime = 0.0;
 
    // Apply velocity and friction
    if (carVelocity >= 0)
@@ -403,6 +494,8 @@ void key(unsigned char ch, int x, int y)
       th = -50;
       ph = 15;
    }
+   else if (ch == 'r' || ch == 'R')
+      useRain = !useRain;
    //  Cycle through different modes
    else if (ch == 'm' || ch == 'M')
    {
@@ -513,11 +606,14 @@ int main(int argc, char *argv[])
    barricadeTexture[1] = LoadTexBMP("redbull.bmp"); // redbull texture
    barricadeTexture[2] = LoadTexBMP("nvidia.bmp");  // nvidia texture
 
-#ifdef USEGLEW
-   //  Initialize GLEW
-   if (glewInit() != GLEW_OK)
-      Fatal("Error initializing GLEW\n");
-#endif
+   // Initialize rain system
+   setupRain();
+
+   // Create rain shader (works on macOS without GLEW)
+   printf("Creating rain shader...\n");
+   rainShader = CreateShaderProg("rain.vert", "rain.frag");
+   printf("Rain shader created: %d\n", rainShader);
+
    //  Tell GLUT to call "display" when the scene should be drawn
    glutDisplayFunc(display);
    //  Tell GLUT to call "reshape" when the window is resized

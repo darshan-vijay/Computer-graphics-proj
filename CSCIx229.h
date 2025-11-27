@@ -135,6 +135,13 @@ void Fatal(const char *format, ...);
 
     void squareBracketMarking();
 
+    // Shader functions
+    void PrintShaderLog(int obj, char *file);
+    void PrintProgramLog(int obj);
+    char *ReadText(char *file);
+    int CreateShader(GLenum type, char *file);
+    int CreateShaderProg(char *VertFile, char *FragFile);
+
 #ifdef __cplusplus
 }
 #endif

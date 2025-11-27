@@ -12,8 +12,8 @@ CLEAN=rm -f *.exe *.o *.a
 else
 #  OSX
 ifeq "$(shell uname)" "Darwin"
-CFLG=-O3 -Wall -Wno-deprecated-declarations
-LIBS=-framework GLUT -framework OpenGL
+CFLG=-O3 -Wall -Wno-deprecated-declarations 
+LIBS=-framework GLUT -framework OpenGL 
 #  Linux/Unix/Solaris
 else
 CFLG=-O3 -Wall
@@ -34,9 +34,10 @@ projection.o: projection.c CSCIx229.h
 shapes.o: shapes.c CSCIx229.h
 setmaterial.o: setmaterial.c CSCIx229.h
 complexObjs.o: complexObjs.c CSCIx229.h
+shader.o: shader.c CSCIx229.h
 
 #  Create archive
-CSCIx229.a:fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o shapes.o setmaterial.o complexObjs.o
+CSCIx229.a:fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o shapes.o setmaterial.o complexObjs.o shader.o
 	ar -rcs $@ $^
 
 # Compile rules

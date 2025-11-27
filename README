@@ -16,7 +16,8 @@
  *  l,L        Toggle light
  *  F3         Toggle light distance
  *
- *
+ * use make command to get the binaries
+ * ./final to view the project
  * In perspective mode, the camera is positioned behind the car, and you can drive the car using w/a/s/d keys.
  * Right now since we can press only one key at a time, the car moves forward/backward with w/s and turns left/right with a/d. Must fix this with sdl.
  * Need to draw the grandstand and few types of stand modified to make it look more realistic.
