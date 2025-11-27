@@ -135,8 +135,8 @@ void reshape(int width, int height)
 
 void setupRain()
 {
-   float rainArea = 40.0f;
-   Drop *drops = malloc(numRainDrops * sizeof(Drop));
+   float rainArea = 120.0f;
+   Drop *drops = (Drop *)malloc(numRainDrops * sizeof(Drop));
 
    srand(time(NULL));
 
@@ -144,12 +144,13 @@ void setupRain()
    {
       drops[i].offsetX = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
       drops[i].offsetZ = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
-      drops[i].speed = 8.0f + ((float)rand() / RAND_MAX) * 8.0f;
-      drops[i].length = 0.1f + ((float)rand() / RAND_MAX) * 0.4f;
+      drops[i].speed = 5.0f + ((float)rand() / RAND_MAX) * 6.0f;
+      drops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f;
    }
 
    glGenBuffers(1, &rainVBO);
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
+
    glBufferData(GL_ARRAY_BUFFER,
                 numRainDrops * sizeof(Drop),
                 drops,
@@ -164,40 +165,48 @@ void renderRain()
    if (!useRain)
       return;
 
-   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-   glEnable(GL_POINT_SMOOTH);
-   glPointSize(2.0f); // fallback only
-
    glUseProgram(rainShader);
 
+   // Time
    glUniform1f(glGetUniformLocation(rainShader, "uTime"), rainTime);
-   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 20.0f);
+   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 60.0f);
 
-   glDisable(GL_LIGHTING);
+   // WIND + TURBULENCE parameters
+   glUniform1f(glGetUniformLocation(rainShader, "windStrength"), 0.25f);
+   glUniform1f(glGetUniformLocation(rainShader, "turbulenceAmp"), 0.12f);
+   glUniform1f(glGetUniformLocation(rainShader, "turbulenceFreq"), 12.0f);
+   glUniform1f(glGetUniformLocation(rainShader, "turbulenceSpeed"), 4.0f);
+
+   // Required for point sprites on macOS
+   glEnable(GL_POINT_SPRITE);
+   glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+   glEnable(GL_POINT_SMOOTH);
+
+   // Blending for transparency
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDepthMask(GL_FALSE);
 
+   // Bind VBO
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
 
-   // Attribute 0: vec4 (offsetX, offsetZ, speed, height)
+   // ATTRIB 0 = rainData (vec4)
    glEnableVertexAttribArray(0);
    glVertexAttribPointer(
-       0,            // attribute index
-       4,            // size
-       GL_FLOAT,     // type
-       GL_FALSE,     // normalize?
-       sizeof(Drop), // stride
-       (void *)0     // offset
-   );
+       0,
+       4,
+       GL_FLOAT,
+       GL_FALSE,
+       sizeof(Drop),
+       (void *)0);
 
-   // Draw points that become streaks in shader
+   // Draw all droplets
    glDrawArrays(GL_POINTS, 0, numRainDrops);
 
    glDisableVertexAttribArray(0);
 
    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
    glDepthMask(GL_TRUE);
    glUseProgram(0);
 }

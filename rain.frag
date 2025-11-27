@@ -4,21 +4,24 @@ void main()
 {
     vec2 uv = gl_PointCoord;
 
-    // Make a thin streak vertically (centered horizontally)
+    // Horizontal thinness
     float xDist = abs(uv.x - 0.5);
 
-    // Very thin streak: width control
-    float width = 0.08;   // smaller = sharper, thinner streak
-    float alphaX = 1.0 - smoothstep(width, width+0.02, xDist);
+    // Pixel-dependent thinness (ensures crisp streaks)
+    float px = fwidth(uv.x);
+    float width = px * 0.4;
 
-    // Vertical gradient to shape the streak
-    float head = smoothstep(0.0, 0.15, uv.y);   // sharp start
-    float tail = smoothstep(1.0, 0.85, uv.y);   // fade end
-    float alphaY = head * tail;
+    float alphaX = 1.0 - smoothstep(width, width * 3.0, xDist);
 
-    float alpha = alphaX * alphaY;
+    // Vertical gradient (head = bright, tail = fade)
+    float head = smoothstep(0.0, 0.1, uv.y);
+    float tail = smoothstep(1.0, 0.9, uv.y);
 
-    if (alpha < 0.05) discard;   // make edges precise
+    float alpha = alphaX * head * tail * gl_Color.a;
 
-    gl_FragColor = vec4(0.8, 0.9, 1.0, alpha);
+    if (alpha < 0.03)
+        discard;
+
+    vec3 rainColor = vec3(0.75, 0.85, 1.0);
+    gl_FragColor = vec4(rainColor, alpha);
 }

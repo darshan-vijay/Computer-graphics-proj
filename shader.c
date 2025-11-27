@@ -92,13 +92,13 @@ int CreateShaderProg(char *VertFile, char *FragFile)
 
     glAttachShader(prog, vert);
     glAttachShader(prog, frag);
+
+    // Bind vec4 rainData to attribute 0 BEFORE linking
     glBindAttribLocation(prog, 0, "rainData");
 
     glLinkProgram(prog);
-    PrintProgramLog(prog);
 
     glDeleteShader(vert);
     glDeleteShader(frag);
-
     return prog;
 }
