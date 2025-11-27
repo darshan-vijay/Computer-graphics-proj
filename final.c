@@ -132,8 +132,10 @@ float ylight = 4;                 // Elevation of light
 unsigned int texture[11];         // Texture names
 unsigned int barricadeTexture[5]; // Barricade Texture names
 
-void reshape(int width, int height)
+void reshape(SDL_Window *window)
 {
+   int width, height;
+   SDL_GetWindowSize(window, &width, &height);
    // Ratio of the width to the height of the window
    asp = (height > 0) ? (double)width / height : 1;
    //  Set the viewport to the entire window
@@ -333,9 +335,9 @@ void DrawSkybox(float size, GLuint *skyTextures)
 }
 
 /*
- *  OpenGL (GLUT) calls this routine to display the scene
+ *  SDL calls this routine to display the scene
  */
-void display()
+void display(SDL_Window *window)
 {
    //  Erase the window and the depth buffer
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -549,18 +551,20 @@ void display()
 
    ErrCheck("display");
    glFlush();
-   glutSwapBuffers();
+   SDL_GL_SwapWindow(window);
 }
 
-/*
- *  GLUT calls this routine when the window is resized
- */
-void idle()
+void update()
 {
    //  Elapsed time in seconds
-   double t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+   static Uint32 startTime = 0;
+   if (startTime == 0)
+      startTime = SDL_GetTicks();
+
+   double t = (SDL_GetTicks() - startTime) / 1000.0;
    zh = fmod(90 * t, 360.0);
 
+   // Update rain animation
    rainTime += 0.05;
    if (rainTime > 1000.0)
       rainTime = 0.0;
@@ -571,7 +575,7 @@ void idle()
       carVelocity -= deceleration;
       if (carVelocity < 0)
          carVelocity = 0;
-      isBraking = 0; // Turn off brake light when coasting
+      isBraking = 0;
    }
    else if (carVelocity < 0)
    {
@@ -594,10 +598,9 @@ void idle()
          steeringAngle = 0;
    }
 
-   // Update car position based on velocity in car's facing direction
+   // Update car position based on velocity
    if (fabs(carVelocity) > 0.001)
    {
-      // Use car's heading for movement direction
       double radRot = (90.0 + carHeading) * M_PI / 180.0;
       mclarenX += carVelocity * sin(radRot);
       mclarenZ += carVelocity * cos(radRot);
@@ -605,79 +608,34 @@ void idle()
 
    // Always update POV position to follow car
    updatePOVPosition();
-
-   //  Tell GLUT it is necessary to redisplay the scene
-   glutPostRedisplay();
 }
 
 /*
- *  GLUT calls this routine when an arrow key is pressed
+ *  Call this routine when a key is pressed
+ *     Returns 1 to continue, 0 to exit
  */
-void special(int key, int x, int y)
+int key()
 {
-   //  Right arrow key - increase angle by 5 degrees
-   if (key == GLUT_KEY_LEFT)
-      th += 5;
-   //  Left arrow key - decrease angle by 5 degrees
-   else if (key == GLUT_KEY_RIGHT)
-      th -= 5;
+   const Uint8 *keys = SDL_GetKeyboardState(NULL);
+   int shift = SDL_GetModState() & KMOD_SHIFT;
 
-   //  Up arrow key - increase elevation by 5 degrees
-   // else if (key == GLUT_KEY_UP)
-   // {
-   //    ph += 5;
-   //    if (ph > 89)
-   //       ph = 89; // Limit upward view
-   // }
-   // //  Down arrow key - decrease elevation by 5 degrees
-   // else if (key == GLUT_KEY_DOWN)
-   // {
-   //    ph -= 5;
-   //    if (ph < 0)
-   //       ph = 0; // Prevent looking below horizon
-   // }
-
-   //  PageUp key - increase dim
-   else if (key == GLUT_KEY_F1)
-      dim += 0.1;
-   //  PageDown key - decrease dim
-   else if (key == GLUT_KEY_F2 && dim > 1)
-      dim -= 0.1;
-   //  F3 key - toggle light distance
-   else if (key == GLUT_KEY_F3)
-      distance = (distance == 1) ? 6 : 1;
-
-   //  Keep angles to +/-360 degrees
-   th %= 360;
-   //  Update projection
-   Project(perspective, fov, asp, dim);
-   //  Tell GLUT it is necessary to redisplay the scene
-   glutPostRedisplay();
-}
-
-/*
- *  GLUT calls this routine when a key is pressed
- */
-void key(unsigned char ch, int x, int y)
-{
    //  Exit on ESC
-   if (ch == 27)
-      exit(0);
+   if (keys[SDL_SCANCODE_ESCAPE])
+      return 0;
    //  Reset view angle
-   else if (ch == '0')
+   else if (keys[SDL_SCANCODE_0])
    {
-      th = -50;
-      ph = 15;
+      th = 105;
+      ph = 20;
    }
-   else if (ch == 'r' || ch == 'R')
+   //  Toggle rain
+   else if (keys[SDL_SCANCODE_R])
       useRain = !useRain;
-   //  Toggle Day/Night mode
-   else if (ch == 'n' || ch == 'N')
-   {
+   //  Toggle Day/Night
+   else if (keys[SDL_SCANCODE_N])
       dayNightMode = (dayNightMode + 1) % 2;
-   }
-   //  Cycle through different modes
-   else if (ch == 'm' || ch == 'M')
+   //  Toggle Mode
+   else if (keys[SDL_SCANCODE_M])
    {
       mode = (mode + 1) % 3;
 
@@ -699,45 +657,67 @@ void key(unsigned char ch, int x, int y)
          ph = 15;
       }
    }
-   //  Cycle through different perspectives
-   else if (ch == 'p' || ch == 'P')
-   {
+   //  Switch projection mode
+   else if (keys[SDL_SCANCODE_P])
       perspective = (perspective + 1) % 2;
-   }
-   //  Light elevation
-   else if (ch == '[')
-      ylight -= 0.1;
-   else if (ch == ']')
-      ylight += 0.1;
-   //  Toggle light
-   else if (ch == 'l' || ch == 'L')
+   //  Toggle lighting
+   else if (keys[SDL_SCANCODE_L])
       light = !light;
+   //  Toggle axes
+   else if (keys[SDL_SCANCODE_Q])
+      axes = 1 - axes;
+   //  Increase/decrease light height
+   else if (keys[SDL_SCANCODE_LEFTBRACKET])
+      ylight -= 0.1;
+   else if (keys[SDL_SCANCODE_RIGHTBRACKET])
+      ylight += 0.1;
+   //  Increase/decrease asimuth
+   else if (keys[SDL_SCANCODE_RIGHT])
+      th += 5;
+   else if (keys[SDL_SCANCODE_LEFT])
+      th -= 5;
+   // //  Increase/decrease elevation
+   // else if (keys[SDL_SCANCODE_UP])
+   //    ph += 5;
+   // else if (keys[SDL_SCANCODE_DOWN])
+   //    ph -= 5;
+   //  PageUp key - increase dim
+   else if (keys[SDL_SCANCODE_F1])
+      dim += 0.1;
+   //  PageDown key - decrease dim
+   else if (keys[SDL_SCANCODE_F2] && dim > 1)
+      dim -= 0.1;
+   //  F3 key - toggle light distance
+   else if (keys[SDL_SCANCODE_F3])
+      distance = (distance == 1) ? 6 : 1;
+
+   th %= 360;
 
    // Handle car driving in POV mode
    if (perspective == 1 && mode == 0)
    {
-      if (ch == 'w' || ch == 'W') // Forward with acceleration
+      if (keys[SDL_SCANCODE_W]) // Forward with acceleration
       {
          carVelocity += acceleration;
          if (carVelocity > maxVelocity)
             carVelocity = maxVelocity;
          isBraking = 0;
       }
-      else if (ch == 's' || ch == 'S') // Backward with acceleration
+      if (keys[SDL_SCANCODE_S]) // Backward with acceleration
       {
          carVelocity -= acceleration;
          if (carVelocity < -maxVelocity * 0.5)
             carVelocity = -maxVelocity * 0.5;
          isBraking = 1; // Braking
       }
-      else if (ch == 'a' || ch == 'A') // Turn left
+      if (keys[SDL_SCANCODE_A]) // Turn left
       {
          carHeading += turnSpeed;
          if (carHeading >= 360)
             carHeading -= 360;
          steeringAngle = -25.0; // Turn wheels left
       }
-      else if (ch == 'd' || ch == 'D') // Turn right
+      if (keys[SDL_SCANCODE_D]) // Turn right
       {
          carHeading -= turnSpeed;
          if (carHeading < 0)
@@ -750,12 +730,10 @@ void key(unsigned char ch, int x, int y)
       perspective = 0; // Force perspective if not in circuit mode
    }
 
-   // Handle axes toggle
-   if (ch == 'q')
-      axes = 1 - axes;
-
+   //  Update projection
    Project(perspective, fov, asp, dim);
-   glutPostRedisplay();
+   //  Return 1 to keep running
+   return 1;
 }
 
 /*
@@ -763,14 +741,24 @@ void key(unsigned char ch, int x, int y)
  */
 int main(int argc, char *argv[])
 {
-   //  Initialize GLUT and process user parameters
-   glutInit(&argc, argv);
-   //  Request double buffered, true color window with Z buffering at 600x600
-   glutInitWindowSize(600, 600);
-   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
-   //  Create the window
-   glutCreateWindow("Project darshan vijayaraghavan");
+   int run = 1;
+   double t0 = 0;
+
+   //  Initialize SDL
+   SDL_Init(SDL_INIT_VIDEO);
+   //  Set size, resizable and double buffering
+   SDL_Window *window = SDL_CreateWindow("Darshan Vijayaraghavan F1", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 600, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+   if (!window)
+      Fatal("Cannot create window\n");
+   SDL_GL_CreateContext(window);
+#ifdef USEGLEW
+   //  Initialize GLEW
+   if (glewInit() != GLEW_OK)
+      Fatal("Error initializing GLEW\n");
+#endif
+   //  Set screen size
+   reshape(window);
 
    texture[0] = LoadTexBMP("asphalt.bmp");    // Track texture
    texture[1] = LoadTexBMP("concrete.bmp");   // Building texture
@@ -809,19 +797,47 @@ int main(int argc, char *argv[])
    printf("Creating rain shader...\n");
    rainShader = CreateShaderProg("rain.vert", "rain.frag");
    printf("Rain shader created: %d\n", rainShader);
-
-   //  Tell GLUT to call "display" when the scene should be drawn
-   glutDisplayFunc(display);
-   //  Tell GLUT to call "reshape" when the window is resized
-   glutReshapeFunc(reshape);
-   //  Tell GLUT to call "special" when an arrow key is pressed
-   glutSpecialFunc(special);
-   //  Tell GLUT to call "key" when a key is pressed
-   glutKeyboardFunc(key);
-   //  Tell GLUT to call "idle" when there is nothing else to do
-   glutIdleFunc(idle);
-   //  Pass control to GLUT so it can interact with the user
    ErrCheck("init");
-   glutMainLoop();
+   while (run)
+   {
+      //  Elapsed time in seconds
+      double t = SDL_GetTicks() / 1000.0;
+      //  Process all pending events
+      SDL_Event event;
+      while (SDL_PollEvent(&event))
+         switch (event.type)
+         {
+         case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+               SDL_SetWindowSize(window, event.window.data1, event.window.data2);
+               reshape(window);
+            }
+            break;
+         case SDL_QUIT:
+            run = 0;
+            break;
+
+         case SDL_KEYDOWN:
+            run = key();
+            t0 = t + 0.5; // Wait 1/2 s before repeating
+            break;
+         default:
+            //  Do nothing
+            break;
+         }
+      //  Repeat key every 50 ms
+      if (t - t0 > 0.05)
+      {
+         run = key();
+         t0 = t;
+      }
+      update();
+      //  Display
+      display(window);
+      //  Slow down display rate to about 100 fps by sleeping 5ms
+      SDL_Delay(5);
+   }
+   SDL_Quit();
    return 0;
 }
