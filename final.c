@@ -39,6 +39,8 @@ int rainShader = 0;
 float rainTime = 0.0f;
 int useRain = 1;
 
+float fogIntensity = 0.04f;
+
 typedef struct
 {
    float offsetX;
@@ -135,80 +137,90 @@ void reshape(int width, int height)
 
 void setupRain()
 {
-   float rainArea = 120.0f;
+   float rainArea = 120.0f; // centered square -120..120
    Drop *drops = (Drop *)malloc(numRainDrops * sizeof(Drop));
 
    srand(time(NULL));
 
    for (int i = 0; i < numRainDrops; i++)
    {
-      drops[i].offsetX = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
-      drops[i].offsetZ = ((float)rand() / RAND_MAX) * rainArea - rainArea / 2;
+      // centered at (0,0)
+      float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f; // -1..1
+      float rz = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+
+      drops[i].offsetX = rx * (rainArea * 0.5f);
+      drops[i].offsetZ = rz * (rainArea * 0.5f);
+
       drops[i].speed = 5.0f + ((float)rand() / RAND_MAX) * 6.0f;
       drops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f;
    }
 
    glGenBuffers(1, &rainVBO);
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
-
    glBufferData(GL_ARRAY_BUFFER,
                 numRainDrops * sizeof(Drop),
                 drops,
                 GL_STATIC_DRAW);
-
    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
    free(drops);
 }
 
 void renderRain()
 {
-   if (!useRain)
-      return;
-
    glUseProgram(rainShader);
 
-   // Time
    glUniform1f(glGetUniformLocation(rainShader, "uTime"), rainTime);
-   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 60.0f);
+   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 30.0f);
 
-   // WIND + TURBULENCE parameters
    glUniform1f(glGetUniformLocation(rainShader, "windStrength"), 0.25f);
    glUniform1f(glGetUniformLocation(rainShader, "turbulenceAmp"), 0.12f);
    glUniform1f(glGetUniformLocation(rainShader, "turbulenceFreq"), 12.0f);
    glUniform1f(glGetUniformLocation(rainShader, "turbulenceSpeed"), 4.0f);
 
-   // Required for point sprites on macOS
    glEnable(GL_POINT_SPRITE);
    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
    glEnable(GL_POINT_SMOOTH);
 
-   // Blending for transparency
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDepthMask(GL_FALSE);
 
-   // Bind VBO
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
 
-   // ATTRIB 0 = rainData (vec4)
    glEnableVertexAttribArray(0);
    glVertexAttribPointer(
-       0,
-       4,
-       GL_FLOAT,
-       GL_FALSE,
-       sizeof(Drop),
-       (void *)0);
+       0, 4, GL_FLOAT, GL_FALSE,
+       sizeof(Drop), (void *)0);
 
-   // Draw all droplets
    glDrawArrays(GL_POINTS, 0, numRainDrops);
 
    glDisableVertexAttribArray(0);
-
    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
    glDepthMask(GL_TRUE);
    glUseProgram(0);
+}
+
+void ApplyFog()
+{
+   glEnable(GL_FOG);
+
+   GLfloat fogColor[4] = {0.65f, 0.70f, 0.75f, 1.0f};
+   glFogfv(GL_FOG_COLOR, fogColor);
+
+   if (perspective == 1)
+   {
+      glFogi(GL_FOG_MODE, GL_EXP2);
+      glFogf(GL_FOG_DENSITY, 0.06f);
+   }
+   else
+   {
+      glFogi(GL_FOG_MODE, GL_LINEAR);
+      glFogf(GL_FOG_START, 10.0f);
+      glFogf(GL_FOG_END, 40.0f);
+   }
 }
 
 /*
@@ -224,7 +236,7 @@ void display()
    glEnable(GL_DEPTH_TEST);
    //  Undo previous
    glLoadIdentity();
-
+   ApplyFog();
    //  Set camera based on projection mode
    switch (perspective)
    {
@@ -234,12 +246,14 @@ void display()
       double Ey = +2 * dim * Sin(ph);
       double Ez = +2 * dim * Cos(th) * Cos(ph);
       gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
+      fogIntensity = 0.04f;
       break;
    }
    case 1: // POV view - looking at car from behind
    {
       // Camera looks at the car (centered in view)
       gluLookAt(povX, povY, povZ, mclarenX, mclarenY + 0.2, mclarenZ, 0, 1, 0);
+      fogIntensity = 0.12f;
       break;
    }
    }

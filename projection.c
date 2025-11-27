@@ -13,7 +13,7 @@ void Project(int perspective, double fov, double asp, double dim)
    glLoadIdentity();
    //  Perspective transformation
    if (perspective > 0)
-      gluPerspective(fov, asp, 0.01, 500);
+      gluPerspective(fov, asp, 0.01, 100);
    //  Orthogonal projection
    else
       glOrtho(-asp * dim, +asp * dim, -dim, +dim, -dim, 500);
