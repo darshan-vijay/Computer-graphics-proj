@@ -7,6 +7,7 @@
  *  p/P        Cycle through different Perspectives
  *  w/a/s/d    Move POV/Drive car (in POV mode)
  *  m/M        Cycle through different display modes
+ *  n/N        Cycle through Day/Night modes
  *  q          Toggle axes
  *  arrows     Change view angle in perspective mode
  *  0          Reset view angle
@@ -28,6 +29,7 @@ int perspective = 0; // Perspective
 int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
 double dim = 8;      //  Size of world
+
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
@@ -40,6 +42,11 @@ float rainTime = 0.0f;
 int useRain = 1;
 
 float fogIntensity = 0.04f;
+
+int dayNightMode = 0; // 0 = day, 1 = night
+const char *textDayNight[] = {"Day", "Night"};
+GLuint nightSky[6]; // Night skybox textures
+GLuint mornSky[6];
 
 typedef struct
 {
@@ -205,22 +212,124 @@ void renderRain()
 
 void ApplyFog()
 {
-   glEnable(GL_FOG);
-
-   GLfloat fogColor[4] = {0.65f, 0.70f, 0.75f, 1.0f};
-   glFogfv(GL_FOG_COLOR, fogColor);
-
-   if (perspective == 1)
+   if (dayNightMode == 1) // Night mode - enable fog
    {
-      glFogi(GL_FOG_MODE, GL_EXP2);
-      glFogf(GL_FOG_DENSITY, 0.06f);
+      glEnable(GL_FOG);
+
+      GLfloat fogColor[4] = {0.65f, 0.70f, 0.75f, 1.0f};
+
+      glFogfv(GL_FOG_COLOR, fogColor);
+
+      if (perspective == 1)
+      {
+         glFogi(GL_FOG_MODE, GL_EXP2);
+         glFogf(GL_FOG_DENSITY, 0.06f);
+      }
+      else
+      {
+         glFogi(GL_FOG_MODE, GL_LINEAR);
+         glFogf(GL_FOG_START, 10.0f);
+         glFogf(GL_FOG_END, 40.0f);
+      }
    }
-   else
+   else // Day mode - no fog
    {
-      glFogi(GL_FOG_MODE, GL_LINEAR);
-      glFogf(GL_FOG_START, 10.0f);
-      glFogf(GL_FOG_END, 40.0f);
+      glDisable(GL_FOG);
    }
+}
+
+void DrawSkybox(float size, GLuint *skyTextures)
+{
+   glPushAttrib(GL_ENABLE_BIT);
+
+   glDisable(GL_FOG);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_CULL_FACE);
+   glDepthMask(GL_FALSE); // Don't write to depth buffer
+
+   glEnable(GL_TEXTURE_2D);
+   glColor3f(1, 1, 1); // Make sure color is white
+
+   // +X (right)  px
+   glBindTexture(GL_TEXTURE_2D, skyTextures[0]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(1, 0);
+   glVertex3f(size, -size, -size);
+   glTexCoord2f(0, 0);
+   glVertex3f(size, -size, size);
+   glTexCoord2f(0, 1);
+   glVertex3f(size, size, size);
+   glTexCoord2f(1, 1);
+   glVertex3f(size, size, -size);
+   glEnd();
+
+   // -X (left)   nx
+   glBindTexture(GL_TEXTURE_2D, skyTextures[1]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(1, 0);
+   glVertex3f(-size, -size, size);
+   glTexCoord2f(0, 0);
+   glVertex3f(-size, -size, -size);
+   glTexCoord2f(0, 1);
+   glVertex3f(-size, size, -size);
+   glTexCoord2f(1, 1);
+   glVertex3f(-size, size, size);
+   glEnd();
+
+   // +Y (top)    py
+   glBindTexture(GL_TEXTURE_2D, skyTextures[2]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0, 1);
+   glVertex3f(-size, size, -size);
+   glTexCoord2f(1, 1);
+   glVertex3f(size, size, -size);
+   glTexCoord2f(1, 0);
+   glVertex3f(size, size, size);
+   glTexCoord2f(0, 0);
+   glVertex3f(-size, size, size);
+   glEnd();
+
+   // -Y (bottom) ny
+   glBindTexture(GL_TEXTURE_2D, skyTextures[3]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0, 0);
+   glVertex3f(-size, -size, size);
+   glTexCoord2f(1, 0);
+   glVertex3f(size, -size, size);
+   glTexCoord2f(1, 1);
+   glVertex3f(size, -size, -size);
+   glTexCoord2f(0, 1);
+   glVertex3f(-size, -size, -size);
+   glEnd();
+
+   // +Z (front)  pz
+   glBindTexture(GL_TEXTURE_2D, skyTextures[4]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0, 0);
+   glVertex3f(-size, -size, size);
+   glTexCoord2f(1, 0);
+   glVertex3f(size, -size, size);
+   glTexCoord2f(1, 1);
+   glVertex3f(size, size, size);
+   glTexCoord2f(0, 1);
+   glVertex3f(-size, size, size);
+   glEnd();
+
+   // -Z (back)   nz
+   glBindTexture(GL_TEXTURE_2D, skyTextures[5]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0, 0);
+   glVertex3f(size, -size, -size);
+   glTexCoord2f(1, 0);
+   glVertex3f(-size, -size, -size);
+   glTexCoord2f(1, 1);
+   glVertex3f(-size, size, -size);
+   glTexCoord2f(0, 1);
+   glVertex3f(size, size, -size);
+   glEnd();
+
+   glDepthMask(GL_TRUE);
+   glPopAttrib();
 }
 
 /*
@@ -231,12 +340,21 @@ void display()
    //  Erase the window and the depth buffer
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   glClearColor(0.53, 0.81, 0.98, 1.0); // Light sky blue background
+   // Set background color based on day/night
+   // if (dayNightMode == 0)
+   //    glClearColor(0.53, 0.81, 0.98, 1.0); // Light sky blue for day
+   // else
+   //    glClearColor(0.05, 0.05, 0.1, 1.0); // Dark blue for night
+
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
    //  Undo previous
    glLoadIdentity();
-   ApplyFog();
+   glUseProgram(0); // turn off shaders before skybox
+
+   // Select skybox based on day/night mode
+   GLuint *currentSky = (dayNightMode == 0) ? mornSky : nightSky;
+
    //  Set camera based on projection mode
    switch (perspective)
    {
@@ -246,25 +364,43 @@ void display()
       double Ey = +2 * dim * Sin(ph);
       double Ez = +2 * dim * Cos(th) * Cos(ph);
       gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
+
+      // Draw skybox at camera origin (before any other translations)
+      glPushMatrix();
+      glTranslatef(Ex, Ey, Ez);
+      DrawSkybox(70.0f, currentSky);
+      glPopMatrix();
+
       fogIntensity = 0.04f;
       break;
    }
-   case 1: // POV view - looking at car from behind
+   case 1: // POV view
    {
-      // Camera looks at the car (centered in view)
       gluLookAt(povX, povY, povZ, mclarenX, mclarenY + 0.2, mclarenZ, 0, 1, 0);
+
+      // Draw skybox at camera position
+      glPushMatrix();
+      glTranslatef(povX, povY, povZ);
+      DrawSkybox(70.0f, currentSky);
+      glPopMatrix();
+
       fogIntensity = 0.12f;
       break;
    }
    }
+
+   ApplyFog();
    glShadeModel(GL_SMOOTH);
 
    //  Light switch
    if (light)
    {
-      //  Translate intensity to color vectors
-      float Ambient[] = {0.01 * ambient, 0.01 * ambient, 0.01 * ambient, 1.0};
-      float Diffuse[] = {0.01 * diffuse, 0.01 * diffuse, 0.01 * diffuse, 1.0};
+      //  Translate intensity to color vectors - adjust for day/night
+      float ambientLevel = (dayNightMode == 0) ? ambient : ambient * 0.7; // Dimmer at night
+      float diffuseLevel = (dayNightMode == 0) ? diffuse : diffuse * 0.7;
+
+      float Ambient[] = {0.01 * ambientLevel, 0.01 * ambientLevel, 0.01 * ambientLevel, 1.0};
+      float Diffuse[] = {0.01 * diffuseLevel, 0.01 * diffuseLevel, 0.01 * diffuseLevel, 1.0};
       float Specular[] = {0.01 * specular, 0.01 * specular, 0.01 * specular, 1.0};
       //  Light position
       float Position[] = {distance * Cos(zh), ylight, distance * Sin(zh), 1.0};
@@ -376,7 +512,13 @@ void display()
       drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
       break;
    }
-   renderRain();
+
+   // Only render rain in night mode
+   if (dayNightMode == 1)
+   {
+      renderRain();
+   }
+
    //  Draw axes - no lighting
    glDisable(GL_LIGHTING);
    glColor3f(1, 1, 1);
@@ -402,7 +544,8 @@ void display()
    //  Five pixels from the lower left corner of the window
    glWindowPos2i(5, 5);
    //  Print the text string
-   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Velocity=%.2f, Heading=%.1f, Steering=%.1f", th, ph, textPers[perspective], text[mode], carVelocity, carHeading, steeringAngle);
+   Print("Angle=%d,%d, Perspective=%s, Mode=%s, Time=%s, Velocity=%.2f, Heading=%.1f, Steering=%.1f",
+         th, ph, textPers[perspective], text[mode], textDayNight[dayNightMode], carVelocity, carHeading, steeringAngle);
 
    ErrCheck("display");
    glFlush();
@@ -478,12 +621,22 @@ void special(int key, int x, int y)
    //  Left arrow key - decrease angle by 5 degrees
    else if (key == GLUT_KEY_RIGHT)
       th -= 5;
+
    //  Up arrow key - increase elevation by 5 degrees
-   else if (key == GLUT_KEY_UP)
-      ph += 5;
-   //  Down arrow key - decrease elevation by 5 degrees
-   else if (key == GLUT_KEY_DOWN)
-      ph -= 5;
+   // else if (key == GLUT_KEY_UP)
+   // {
+   //    ph += 5;
+   //    if (ph > 89)
+   //       ph = 89; // Limit upward view
+   // }
+   // //  Down arrow key - decrease elevation by 5 degrees
+   // else if (key == GLUT_KEY_DOWN)
+   // {
+   //    ph -= 5;
+   //    if (ph < 0)
+   //       ph = 0; // Prevent looking below horizon
+   // }
+
    //  PageUp key - increase dim
    else if (key == GLUT_KEY_F1)
       dim += 0.1;
@@ -496,7 +649,6 @@ void special(int key, int x, int y)
 
    //  Keep angles to +/-360 degrees
    th %= 360;
-   ph %= 360;
    //  Update projection
    Project(perspective, fov, asp, dim);
    //  Tell GLUT it is necessary to redisplay the scene
@@ -519,6 +671,11 @@ void key(unsigned char ch, int x, int y)
    }
    else if (ch == 'r' || ch == 'R')
       useRain = !useRain;
+   //  Toggle Day/Night mode
+   else if (ch == 'n' || ch == 'N')
+   {
+      dayNightMode = (dayNightMode + 1) % 2;
+   }
    //  Cycle through different modes
    else if (ch == 'm' || ch == 'M')
    {
@@ -527,7 +684,7 @@ void key(unsigned char ch, int x, int y)
       // Adjust viewing distance based on mode
       if (mode == 0)
       {
-         dim = 8;
+         dim = 6;
       }
       else if (mode == 1)
       {
@@ -628,6 +785,22 @@ int main(int argc, char *argv[])
    barricadeTexture[0] = LoadTexBMP("pirelli.bmp"); // pirelli texture
    barricadeTexture[1] = LoadTexBMP("redbull.bmp"); // redbull texture
    barricadeTexture[2] = LoadTexBMP("nvidia.bmp");  // nvidia texture
+
+   // Day skybox
+   mornSky[0] = LoadTexBMP("pxMorn.bmp"); // right
+   mornSky[1] = LoadTexBMP("nxMorn.bmp"); // left
+   mornSky[2] = LoadTexBMP("pyMorn.bmp"); // top
+   mornSky[3] = LoadTexBMP("nyMorn.bmp"); // bottom
+   mornSky[4] = LoadTexBMP("pzMorn.bmp"); // front
+   mornSky[5] = LoadTexBMP("nzMorn.bmp"); // back
+
+   // Night skybox
+   nightSky[0] = LoadTexBMP("pxNight.bmp"); // right
+   nightSky[1] = LoadTexBMP("nxNight.bmp"); // left
+   nightSky[2] = LoadTexBMP("pyNight.bmp"); // top
+   nightSky[3] = LoadTexBMP("nyNight.bmp"); // bottom
+   nightSky[4] = LoadTexBMP("pzNight.bmp"); // front
+   nightSky[5] = LoadTexBMP("nzNight.bmp"); // back
 
    // Initialize rain system
    setupRain();
