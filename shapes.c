@@ -557,6 +557,32 @@ void ball(double x, double y, double z, double r)
    glPopMatrix();
 }
 
+/*
+ *  Draw a ball
+ *     at (x,y,z)
+ *     radius (r)
+ */
+void sphere(double x, double y, double z, double r)
+{
+   //  Save transformation
+   glPushMatrix();
+   //  Offset, scale and rotate
+   glTranslated(x, y, z);
+   glScaled(r, r, r);
+   //  Bands of latitude
+   for (int ph = -90; ph < 90; ph += 10)
+   {
+      glBegin(GL_QUAD_STRIP);
+      for (int th = 0; th <= 360; th += 2 * 10)
+      {
+         Vertex(th, ph);
+         Vertex(th, ph + 10);
+      }
+      glEnd();
+   }
+   glPopMatrix();
+}
+
 void rectangleTex(double x, double y, double z, double width, double height, double rx, double ry, double rz, unsigned int texture, int useTexture)
 {
    glPushMatrix();

@@ -121,6 +121,8 @@ void Fatal(const char *format, ...);
 
     void ball(double x, double y, double z, double r);
 
+    void sphere(double x, double y, double z, double r);
+
     void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures);
 
     void drawRoadBlockRightTurn(double x, double y, double z, double innerRadius, double width, double rotation, double degreeTurn, unsigned int texture[], int curbs);
@@ -131,9 +133,13 @@ void Fatal(const char *format, ...);
 
     void drawFrameBox();
 
-    void drawSupportBanner(float height, float width, float boxUnit);
+    void drawSupportBanner(float height, float width, float boxUnit, int type);
 
     void squareBracketMarking();
+
+    void drawTrafficLight();
+
+    void drawCamera();
 
     // Shader functions
     void PrintShaderLog(int obj, char *file);

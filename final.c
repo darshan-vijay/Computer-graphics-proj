@@ -426,10 +426,18 @@ void display(SDL_Window *window)
    {
    case 0:
 
+      glPushMatrix();
+      glTranslated(12, 0, -3);
+      drawSupportBanner(3, 5.5, 0.5, 2);
+      glPopMatrix();
+      break;
+
+   case -1:
+
       // Support banner
       glPushMatrix();
       glTranslated(12, 0, -3);
-      drawSupportBanner(3, 5.5, 0.5);
+      drawSupportBanner(3, 5.5, 0.5, 1); // traffic light type
       glPopMatrix();
 
       // Circuit with barricades
@@ -694,7 +702,7 @@ int key()
    {
       mode = (mode + 1) % 3;
       if (mode == 0)
-         dim = 6;
+         dim = 2;
       else if (mode == 1)
       {
          dim = 10;

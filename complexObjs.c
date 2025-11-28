@@ -1500,11 +1500,42 @@ void drawFrameBox()
     glPopMatrix();
 }
 // To draw a support banner of given height and width using frame boxes
-void drawSupportBanner(float height, float width, float boxUnit)
+void drawSupportBanner(float height, float width, float boxUnit, int type)
 {
+    if (type == 1)
+    {
+        glPushMatrix();
+        glTranslatef(0, height, width / 2 + 1);
+        glScalef(0.16, 0.16, 0.16);
+        drawTrafficLight();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(0, height, width / 2);
+        glScalef(0.16, 0.16, 0.16);
+        drawTrafficLight();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(0, height, width / 2 - 1);
+        glScalef(0.16, 0.16, 0.16);
+        drawTrafficLight();
+        glPopMatrix();
+    }
+
+    if (type == 2)
+    {
+        glPushMatrix();
+        glTranslatef(0, height + boxUnit * 1.5, width);
+        glRotated(-8, 0, 1, 0);
+        glRotated(10, 0, 0, 1);
+        glScalef(0.3, 0.3, 0.3);
+        drawCamera();
+        glPopMatrix();
+    }
+
     SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 40);
     glColor3f(0.4, 0.4, 0.4);
-    // vertical sides
     for (float i = 0; i < height; i += boxUnit)
     {
         glPushMatrix();
@@ -1530,4 +1561,137 @@ void drawSupportBanner(float height, float width, float boxUnit)
         drawFrameBox();
         glPopMatrix();
     }
+}
+
+void drawTrafficLight()
+{
+    // Traffic light box (dark metal/plastic housing)
+    glPushMatrix();
+    SetMaterial(0.1, 0.1, 0.1, // ambient (dark)
+                0.1, 0.1, 0.1, // diffuse (dark)
+                0.3, 0.3, 0.3, // specular (slightly shiny)
+                10.0);         // shininess
+    cube(0, 0, 0, 1, 3, 1, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // Red light (top) - glowing red
+    glPushMatrix();
+    glTranslatef(-0.5, 1.5, 0);
+    SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
+                1.0, 0.0, 0.0, // diffuse (bright red)
+                1.0, 0.5, 0.5, // specular (shiny red)
+                100.0);        // shininess
+    // Manually set emission for glow
+    float redEmission[] = {0.8, 0.0, 0.0, 1.0};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
+    sphere(0, 0, 0, 0.8);
+    glPopMatrix();
+
+    // Yellow light (middle) - glowing yellow
+    glPushMatrix();
+    glTranslatef(-0.5, 0, 0);
+    SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
+                1.0, 0.0, 0.0, // diffuse (bright red)
+                1.0, 0.5, 0.5, // specular (shiny red)
+                100.0);        // shininess
+    // Manually set emission for glow
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
+    sphere(0, 0, 0, 0.8);
+    glPopMatrix();
+
+    // Green light (bottom) - glowing green
+    glPushMatrix();
+    glTranslatef(-0.5, -1.5, 0);
+    SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
+                1.0, 0.0, 0.0, // diffuse (bright red)
+                1.0, 0.5, 0.5, // specular (shiny red)
+                100.0);        // shininess
+    // Manually set emission for glow
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
+    sphere(0, 0, 0, 0.8);
+    glPopMatrix();
+
+    // Reset emission to zero for other objects
+    float noEmission[] = {0.0, 0.0, 0.0, 1.0};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
+}
+
+void drawCamera()
+{
+
+    // camera housing
+    glPushMatrix();
+    SetMaterial(0.15, 0.15, 0.15,
+                0.3, 0.3, 0.3,
+                0.6, 0.6, 0.6,
+                60.0);
+    cube(0, 0, 0, 0.9, 0.5, 0.6, 0, 0, 0, 0);
+    glPopMatrix();
+
+    glPushMatrix();
+    SetMaterial(0.15, 0.15, 0.15,
+                0.3, 0.3, 0.3,
+                0.8, 0.7, 0.8,
+                60.0);
+    cube(0, 0, 0, 0.8, 0.6, 0.7, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // silver connection between camera body and lens
+    glPushMatrix();
+    glTranslatef(-1, 0, 0);
+    SetMaterial(0.3, 0.3, 0.3,
+                0.5, 0.5, 0.5,
+                0.9, 0.9, 0.9,
+                100.0);
+    cylinder(0, 0, 0, 0.2, 0.5, 20, 0, 0, 90, 0, 0, 0);
+    glPopMatrix();
+
+    // lens Cup
+    glPushMatrix();
+    glTranslatef(-1.6, 0, 0);
+    SetMaterial(0.05, 0.05, 0.05,
+                0.2, 0.2, 0.2,
+                0.4, 0.4, 0.4,
+                40.0);
+    cylinder(0, 0, 0, 0.4, 0.6, 20, 0, 0, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // camera handle
+    glPushMatrix();
+    glTranslatef(0.5, -0.5, 0);
+    glRotated(90, 0, 0, 1);
+
+    SetMaterial(0.3, 0.3, 0.3,
+                0.5, 0.5, 0.5,
+                0.9, 0.9, 0.9,
+                100.0);
+    cylinder(0, 0, 0, 0.15, 2, 20, 0, 0, 90, 0, 0, 0);
+    glPopMatrix();
+
+    // sphere lens
+    glPushMatrix();
+    glTranslatef(-1.75, 0, 0);
+    SetMaterial(0.2, 0.25, 0.3,  // ambient (ice blue)
+                0.3, 0.4, 0.5,   // diffuse (light sky blue)
+                0.95, 0.98, 1.0, // specular (almost white highlights)
+                128.0);          // shininess
+    sphere(0, 0, 0, 0.28);
+    glPopMatrix();
+
+    // red light
+    glPushMatrix();
+    glTranslatef(-0.65, 0.65, 0.35);
+    SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
+                1.0, 0.0, 0.0, // diffuse (bright red)
+                1.0, 0.5, 0.5, // specular (shiny red)
+                100.0);        // shininess
+    // Manually set emission for glow
+    float redEmission[] = {0.8, 0.0, 0.0, 1.0};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
+    cube(0, 0, 0, 0.04, 0.04, 0.04, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // Reset emission to zero for other objects
+    float noEmission[] = {0.0, 0.0, 0.0, 1.0};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
 }
