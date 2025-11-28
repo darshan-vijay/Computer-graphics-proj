@@ -19,11 +19,9 @@
  * use make command to get the binaries
  * ./final to view the project
  * In perspective mode, the camera is positioned behind the car, and you can drive the car using w/a/s/d keys.
- * Right now since we can press only one key at a time, the car moves forward/backward with w/s and turns left/right with a/d. Must fix this with sdl.
  * Need to draw the grandstand and few types of stand modified to make it look more realistic.
  * The frame at the start line will have 4 types of components fixed (start line traffic lights, cameras, spotlight, sponsor banners).
  * Switching between different views based on camera position.
- * Add Skybox
  * Simulate movement in other cars too.
  * Add lights.
  * Add textures to all objects.

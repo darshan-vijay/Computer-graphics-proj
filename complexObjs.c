@@ -248,9 +248,9 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
 
-    rectangle(-4.4, 1.08, 0, 0.45, 1.6, -90, 0, 0); // back fin
-    rectangle(-4.4, 1.13, 0.8, 0.45, 0.1, 0, 0, 0);
-    rectangle(-4.4, 1.13, -0.8, 0.45, 0.1, 0, 0, 0);
+    rectangle(-4.4, 1.06, 0, 0.45, 1.6, -90, 0, 0); // back fin
+    rectangle(-4.4, 1.11, 0.8, 0.45, 0.1, 0, 0, 0);
+    rectangle(-4.4, 1.11, -0.8, 0.45, 0.1, 0, 0, 0);
     rectangle(-4.4, 0.16, -0.39, 0.45, 1, 0, 0, 0);
     rectangle(-4.4, 0.16, 0.39, 0.45, 1, 0, 0, 0);
     rectangle(-4.4, 0.85, -0.6, 0.45, 0.62, -45, 0, 0);
@@ -316,22 +316,18 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     // Front wheels with steering rotation
     glPushMatrix();
-    glTranslated(1, 0, -1.35);
-    glRotated(-steeringAngle, 0, 1, 0); // Rotate around Y axis for steering
-    glTranslated(-1, 0, 1.2);
+    glRotated(-steeringAngle * 0.4, 0, 1, 0); // Rotate around Y axis for steering
     cylinder(1, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
 
     glPushMatrix();
-    glTranslated(1, 0, 1.35);
-    glRotated(-steeringAngle, 0, 1, 0); // Rotate around Y axis for steering
-    glTranslated(-1, 0, -1.2);
+    glRotated(-steeringAngle * 0.4, 0, 1, 0); // Rotate around Y axis for steering
     cylinder(1, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
 
     // Rear wheels
-    cylinder(-4, 0, -1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
-    cylinder(-4, 0, 1.2, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinder(-4, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinder(-4, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
 
     // cockpit bezier and halo
     SetMaterial(colors[0][0], colors[0][1], colors[0][2],
