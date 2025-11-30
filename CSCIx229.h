@@ -133,13 +133,15 @@ void Fatal(const char *format, ...);
 
     void drawFrameBox();
 
-    void drawSupportBanner(float height, float width, float boxUnit, int type);
+    void drawSupportBanner(float height, float width, float boxUnit, int type, unsigned int topBannerTexture);
 
     void squareBracketMarking();
 
     void drawTrafficLight();
 
     void drawCamera();
+
+    void drawLampFixture();
 
     // Shader functions
     void PrintShaderLog(int obj, char *file);

@@ -428,7 +428,7 @@ void display(SDL_Window *window)
 
       glPushMatrix();
       glTranslated(12, 0, -3);
-      drawSupportBanner(3, 5.5, 0.5, 2);
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[0]);
       glPopMatrix();
       break;
 
@@ -437,7 +437,7 @@ void display(SDL_Window *window)
       // Support banner
       glPushMatrix();
       glTranslated(12, 0, -3);
-      drawSupportBanner(3, 5.5, 0.5, 1); // traffic light type
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[4]);
       glPopMatrix();
 
       // Circuit with barricades

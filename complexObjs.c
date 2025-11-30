@@ -1500,7 +1500,7 @@ void drawFrameBox()
     glPopMatrix();
 }
 // To draw a support banner of given height and width using frame boxes
-void drawSupportBanner(float height, float width, float boxUnit, int type)
+void drawSupportBanner(float height, float width, float boxUnit, int type, unsigned int topBannerTexture)
 {
     if (type == 1)
     {
@@ -1521,6 +1521,14 @@ void drawSupportBanner(float height, float width, float boxUnit, int type)
         glScalef(0.16, 0.16, 0.16);
         drawTrafficLight();
         glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(0, height + boxUnit * 1.5, width);
+        glRotated(-8, 0, 1, 0);
+        glRotated(10, 0, 0, 1);
+        glScalef(0.3, 0.3, 0.3);
+        drawCamera();
+        glPopMatrix();
     }
 
     if (type == 2)
@@ -1531,6 +1539,42 @@ void drawSupportBanner(float height, float width, float boxUnit, int type)
         glRotated(10, 0, 0, 1);
         glScalef(0.3, 0.3, 0.3);
         drawCamera();
+        glPopMatrix();
+    }
+
+    if (type == 3)
+    {
+        glPushMatrix();
+        glTranslatef(-boxUnit / 2, height + boxUnit, width / 2);
+        glRotated(-90, 0, 0, 1);
+        glScalef(1, 1, 1);
+        drawLampFixture();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(-boxUnit / 2, height + boxUnit, 0);
+        glRotated(-90, 0, 0, 1);
+        glScalef(1, 1, 1);
+        drawLampFixture();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(-boxUnit / 2, height + boxUnit, width);
+        glRotated(-90, 0, 0, 1);
+        glScalef(1, 1, 1);
+        drawLampFixture();
+        glPopMatrix();
+    }
+
+    if (type == 4)
+    {
+        // Sign/board with texture
+        SetMaterial(0.5, 0.5, 0.5, 0.9, 0.9, 0.9, 0.3, 0.3, 0.3, 20);
+        glPushMatrix();
+        glTranslatef(-0.01, height, (width + boxUnit) / 2);
+
+        glRotated(180, 0, 1, 0);
+        rectangleTex(0, 0, 0, width + boxUnit, 3 * boxUnit, 0, 90, 0, topBannerTexture, 1);
         glPopMatrix();
     }
 
@@ -1694,4 +1738,86 @@ void drawCamera()
     // Reset emission to zero for other objects
     float noEmission[] = {0.0, 0.0, 0.0, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
+}
+void drawLampFixture()
+{
+    float domeRadius = 0.4f;
+    int slices = 32;
+    int stacks = 16;
+
+    glPushMatrix();
+    glTranslatef(0, 0, 0);
+    glRotatef(-90, 1, 0, 0); // dome faces downward
+
+    // --- DRAW DOME (with material properties) ---
+    SetMaterial(0.1, 0.1, 0.1, // Dark ambient
+                0.3, 0.3, 0.3, // Grey diffuse
+                0.6, 0.6, 0.6, // Shiny specular
+                50.0);         // Shininess
+
+    // dome surface with proper normals
+    for (int j = 0; j < stacks; j++)
+    {
+        float lat0 = (M_PI / 2.0f) * ((float)j / stacks);
+        float lat1 = (M_PI / 2.0f) * ((float)(j + 1) / stacks);
+
+        float z0 = domeRadius * cos(lat0);
+        float r0 = domeRadius * sin(lat0);
+
+        float z1 = domeRadius * cos(lat1);
+        float r1 = domeRadius * sin(lat1);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int k = 0; k <= slices; k++)
+        {
+            float lng = 2.0 * M_PI * (float)k / slices;
+            float cosLng = cos(lng);
+            float sinLng = sin(lng);
+
+            // Calculate normals for proper lighting
+            float nx0 = r0 * cosLng / domeRadius;
+            float ny0 = r0 * sinLng / domeRadius;
+            float nz0 = z0 / domeRadius;
+
+            glNormal3f(nx0, ny0, nz0);
+            glVertex3f(r0 * cosLng, r0 * sinLng, z0);
+
+            float nx1 = r1 * cosLng / domeRadius;
+            float ny1 = r1 * sinLng / domeRadius;
+            float nz1 = z1 / domeRadius;
+
+            glNormal3f(nx1, ny1, nz1);
+            glVertex3f(r1 * cosLng, r1 * sinLng, z1);
+        }
+        glEnd();
+    }
+
+    // --- EMISSIVE CIRCULAR BASE ---
+    // Set bright emissive material
+    SetMaterial(1.0, 1.0, 0.3, // Yellow ambient
+                1.0, 1.0, 0.3, // Yellow diffuse
+                1.0, 1.0, 0.8, // Slight white specular
+                100.0);        // High shininess
+
+    // Enable strong emission for glow effect
+    float emission[] = {1.0f, 1.0f, 0.9f, 1.0f}; // Warm white glow
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission);
+
+    glBegin(GL_TRIANGLE_FAN);
+    glNormal3f(0, 0, -1); // Normal pointing down
+    glVertex3f(0, 0, 0);  // center
+
+    for (int k = 0; k <= slices; k++)
+    {
+        float lng = 2.0 * M_PI * (float)k / slices;
+        glNormal3f(0, 0, -1);
+        glVertex3f(domeRadius * cos(lng), domeRadius * sin(lng), 0);
+    }
+    glEnd();
+
+    // Reset emission to zero so it doesn't affect other objects
+    float noEmission[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
+
+    glPopMatrix();
 }
