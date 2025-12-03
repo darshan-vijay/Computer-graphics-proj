@@ -424,15 +424,14 @@ void display(SDL_Window *window)
    //  Decide what to draw
    switch (mode)
    {
-   case 0:
+   case -1:
 
       glPushMatrix();
-      glTranslated(12, 0, -3);
-      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[0]);
+      drawGrandStand();
       glPopMatrix();
       break;
 
-   case -1:
+   case 0:
 
       // Support banner
       glPushMatrix();

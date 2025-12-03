@@ -1821,3 +1821,207 @@ void drawLampFixture()
 
     glPopMatrix();
 }
+
+void drawGrandStand()
+{
+    int numDecks = 3;         // Number of levels
+    float deckHeight = 2.0f;  // Vertical spacing between decks
+    float deckDepth = 4.0f;   // Depth of each seating platform
+    float deckWidth = 10.0f;  // Width of grandstand
+    float seatDepth = 0.4f;   // Depth of each bleacher row
+    int numRows = 8;          // Bleacher rows per deck
+    float slantAngle = 25.0f; // Angle of slant
+
+    for (int deck = 0; deck < numDecks; deck++)
+    {
+        float baseY = deck * deckHeight;
+        float baseZ = deck * deckDepth * 0.6f; // Offset each deck back
+
+        glPushMatrix();
+        glTranslatef(0, baseY, baseZ);
+
+        // --- SLANTING PLATFORM (Main deck surface) ---
+        glPushMatrix();
+        glRotatef(-slantAngle, 1, 0, 0); // Slant upward
+
+        SetMaterial(0.3, 0.25, 0.2, // Brown ambient
+                    0.5, 0.4, 0.3,  // Brown diffuse
+                    0.2, 0.2, 0.2,  // Low specular
+                    10.0);
+
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f(-deckWidth / 2, 0, 0);
+        glVertex3f(deckWidth / 2, 0, 0);
+        glVertex3f(deckWidth / 2, 0, deckDepth);
+        glVertex3f(-deckWidth / 2, 0, deckDepth);
+        glEnd();
+
+        // --- BLEACHER SEATS (Horizontal rows on the slanted platform) ---
+        SetMaterial(0.1, 0.3, 0.6, // Blue ambient
+                    0.2, 0.5, 0.8, // Blue diffuse
+                    0.3, 0.3, 0.3, // Specular
+                    20.0);
+
+        for (int row = 0; row < numRows; row++)
+        {
+            float rowZ = (deckDepth / numRows) * row;
+            float seatHeight = 0.3f;
+
+            // Seat surface
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ);
+            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ);
+            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ + seatDepth);
+            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ + seatDepth);
+            glEnd();
+
+            // Seat back (vertical part)
+            glBegin(GL_QUADS);
+            glNormal3f(0, 0, -1);
+            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ + seatDepth);
+            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ + seatDepth);
+            glVertex3f(deckWidth / 2 - 0.1, seatHeight, rowZ + seatDepth);
+            glVertex3f(-deckWidth / 2 + 0.1, seatHeight, rowZ + seatDepth);
+            glEnd();
+        }
+
+        glPopMatrix(); // End slanted platform
+
+        // --- STAIRS SETUP ---
+        SetMaterial(0.4, 0.4, 0.4, // Gray ambient
+                    0.6, 0.6, 0.6, // Gray diffuse
+                    0.3, 0.3, 0.3, // Specular
+                    30.0);
+
+        int numSteps = 12;
+        float totalRise = deckDepth * sin(slantAngle * M_PI / 180.0f);
+        float totalRun = deckDepth * cos(slantAngle * M_PI / 180.0f);
+        float stepHeight = totalRise / numSteps;
+        float stepDepth = totalRun / numSteps;
+
+        // --- LEFT STAIRS ---
+        float leftStairX = -deckWidth / 2;
+        for (int step = 0; step < numSteps; step++)
+        {
+            float stepY = step * stepHeight;
+            float stepZ = step * stepDepth;
+
+            // Step tread (horizontal)
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(leftStairX, stepY + stepHeight, stepZ);
+            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ);
+            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ + stepDepth);
+            glVertex3f(leftStairX, stepY + stepHeight, stepZ + stepDepth);
+            glEnd();
+
+            // Step riser (vertical)
+            glBegin(GL_QUADS);
+            glNormal3f(0, 0, -1);
+            glVertex3f(leftStairX, stepY, stepZ);
+            glVertex3f(leftStairX - 1.0f, stepY, stepZ);
+            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ);
+            glVertex3f(leftStairX, stepY + stepHeight, stepZ);
+            glEnd();
+        }
+
+        // --- RIGHT STAIRS ---
+        float rightStairX = deckWidth / 2;
+        for (int step = 0; step < numSteps; step++)
+        {
+            float stepY = step * stepHeight;
+            float stepZ = step * stepDepth;
+
+            // Step tread (horizontal)
+            glBegin(GL_QUADS);
+            glNormal3f(0, 1, 0);
+            glVertex3f(rightStairX, stepY + stepHeight, stepZ);
+            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ);
+            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ + stepDepth);
+            glVertex3f(rightStairX, stepY + stepHeight, stepZ + stepDepth);
+            glEnd();
+
+            // Step riser (vertical)
+            glBegin(GL_QUADS);
+            glNormal3f(0, 0, -1);
+            glVertex3f(rightStairX, stepY, stepZ);
+            glVertex3f(rightStairX + 1.0f, stepY, stepZ);
+            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ);
+            glVertex3f(rightStairX, stepY + stepHeight, stepZ);
+            glEnd();
+        }
+
+        glPopMatrix(); // End deck transformation
+
+        // --- TWO VERTICAL SUPPORT PILLARS PER DECK (Left and Right) ---
+        SetMaterial(0.3, 0.3, 0.3, // Dark gray
+                    0.5, 0.5, 0.5, // Gray
+                    0.6, 0.6, 0.6, // Shiny
+                    50.0);
+
+        // Calculate the height to middle of slanted deck + 0.5
+        float slantMidHeight = baseY + (deckDepth / 2) * sin(slantAngle * M_PI / 180.0f) + 0.5f;
+        float slantMidZ = baseZ + (deckDepth / 2) * cos(slantAngle * M_PI / 180.0f);
+        glPushMatrix();
+        glTranslatef(0, slantMidHeight / 2, 0);
+        // Left support pillar
+        cylinder(-deckWidth / 2 - 1.2f, 0, slantMidZ,
+                 0.25f,          // thick radius
+                 slantMidHeight, // height from ground to mid-deck
+                 16,             // slices
+                 0, 0, 0,        // rotation
+                 0, 0, 0);       // no texture
+
+        // Right support pillar
+        cylinder(deckWidth / 2 + 1.2f, 0, slantMidZ,
+                 0.25f,          // thick radius
+                 slantMidHeight, // height from ground to mid-deck
+                 16,             // slices
+                 0, 0, 0,        // rotation
+                 0, 0, 0);       // no texture
+        glPopMatrix();
+    }
+
+    // --- RAILING ON TOP DECK (FIXED AND PROPER) ---
+    SetMaterial(0.6, 0.6, 0.6,
+                0.8, 0.8, 0.8,
+                0.9, 0.9, 0.9,
+                80.0);
+
+    // Calculate position at the BACK (highest point) of top deck
+    int topDeck = numDecks - 1;
+    float topDeckBaseY = topDeck * deckHeight;
+    float topDeckBaseZ = topDeck * deckDepth * 0.6f;
+
+    // Back edge of the slanted platform (highest point)
+    float railingY = topDeckBaseY + deckDepth * sin(slantAngle * M_PI / 180.0f);
+    float railingZ = topDeckBaseZ + deckDepth * cos(slantAngle * M_PI / 180.0f);
+
+    // Railing posts across the width
+    int numPosts = 11;
+    for (int p = 0; p < numPosts; p++)
+    {
+        float postX = -deckWidth / 2 + (deckWidth / (numPosts - 1)) * p;
+        cylinder(postX, railingY, railingZ,
+                 0.05f, // thin post
+                 1.0f,  // height
+                 8,     // slices
+                 0, 0, 0, 0, 0, 0);
+    }
+
+    // Middle horizontal railing bar
+    glPushMatrix();
+    glTranslatef(0, railingY + 0.5f, railingZ);
+    glRotatef(90, 0, 1, 0);
+    cylinder(0, 0, 0, 0.03f, deckWidth, 8, 90, 0, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // Bottom horizontal railing bar
+    glPushMatrix();
+    glTranslatef(0, railingY + 0.1f, railingZ);
+    glRotatef(90, 0, 1, 0);
+    cylinder(0, 0, 0, 0.03f, deckWidth, 8, 90, 0, 0, 0, 0, 0);
+    glPopMatrix();
+}

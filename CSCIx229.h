@@ -143,6 +143,8 @@ void Fatal(const char *format, ...);
 
     void drawLampFixture();
 
+    void drawGrandStand();
+
     // Shader functions
     void PrintShaderLog(int obj, char *file);
     void PrintProgramLog(int obj);
