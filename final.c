@@ -33,12 +33,41 @@ double dim = 8;      //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
-int numRainDrops = 5000;
+typedef struct
+{
+   float offsetX;
+   float offsetZ;
+   float speed;
+   float length;
+} Drop;
 
-unsigned int rainVBO = 0;
-int rainShader = 0;
+typedef struct
+{
+   float offsetX;
+   float offsetZ;
+   float birthTime;
+} Splash;
 
+// Configuration
+int numRainDrops = 7000;
+int maxSplashes = 300;
+float rainHeight = 30.0f;
+float rainArea = 120.0f;
+
+// GPU buffers
+GLuint rainVBO;
+GLuint splashVBO;
+GLuint rainShader, splashShader;
+
+// Data
+Splash *splashBuffer;
+int splashWriteIndex = 0;
+Drop *rainDrops = NULL;
+
+// Timing
 float rainTime = 0.0f;
+float lastCheckTime = -1.0f;
+
 int useRain = 1;
 
 float fogIntensity = 0.04f;
@@ -47,14 +76,6 @@ int dayNightMode = 0; // 0 = day, 1 = night
 const char *textDayNight[] = {"Day", "Night"};
 GLuint nightSky[6]; // Night skybox textures
 GLuint mornSky[6];  // Morning skybox textures
-
-typedef struct
-{
-   float offsetX;
-   float offsetZ;
-   float speed;
-   float length;
-} Drop;
 
 // Colors in order: Body, Fins, Halo
 // Ferrari
@@ -148,33 +169,75 @@ void reshape(SDL_Window *window)
 
 void setupRain()
 {
-   float rainArea = 120.0f; // centered square -120..120
-   Drop *drops = (Drop *)malloc(numRainDrops * sizeof(Drop));
-
+   rainDrops = (Drop *)malloc(numRainDrops * sizeof(Drop));
    srand(time(NULL));
 
    for (int i = 0; i < numRainDrops; i++)
    {
-      // centered at (0,0)
-      float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f; // -1..1
+      float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
       float rz = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
 
-      drops[i].offsetX = rx * (rainArea * 0.5f);
-      drops[i].offsetZ = rz * (rainArea * 0.5f);
-
-      drops[i].speed = 5.0f + ((float)rand() / RAND_MAX) * 6.0f;
-      drops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f;
+      rainDrops[i].offsetX = rx * (rainArea * 0.5f);
+      rainDrops[i].offsetZ = rz * (rainArea * 0.5f);
+      rainDrops[i].speed = 8.0f + ((float)rand() / RAND_MAX) * 6.0f;
+      rainDrops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f;
    }
 
    glGenBuffers(1, &rainVBO);
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
-   glBufferData(GL_ARRAY_BUFFER,
-                numRainDrops * sizeof(Drop),
-                drops,
-                GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, numRainDrops * sizeof(Drop), rainDrops, GL_STATIC_DRAW);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-   free(drops);
+   splashBuffer = (Splash *)calloc(maxSplashes, sizeof(Splash));
+   for (int i = 0; i < maxSplashes; i++)
+   {
+      splashBuffer[i].birthTime = -999.0f;
+   }
+
+   glGenBuffers(1, &splashVBO);
+   glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
+   glBufferData(GL_ARRAY_BUFFER, maxSplashes * sizeof(Splash), splashBuffer, GL_DYNAMIC_DRAW);
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+void checkForSplashes(float deltaTime)
+{
+   if (lastCheckTime < 0)
+   {
+      lastCheckTime = rainTime;
+      return;
+   }
+
+   float now = rainTime;
+   float before = lastCheckTime;
+
+   for (int i = 0; i < numRainDrops; i++)
+   {
+      float speed = rainDrops[i].speed;
+
+      // Where was the drop before?
+      float beforeY = rainHeight - fmod(before * speed, rainHeight);
+
+      // Where is the drop now?
+      float nowY = rainHeight - fmod(now * speed, rainHeight);
+
+      // Did it cross the ground (Y = 0)?
+      if (beforeY > 0.5f && nowY <= 0.5f)
+      {
+         // YES! Make a splash at this X/Z location
+         splashBuffer[splashWriteIndex].offsetX = rainDrops[i].offsetX;
+         splashBuffer[splashWriteIndex].offsetZ = rainDrops[i].offsetZ;
+         splashBuffer[splashWriteIndex].birthTime = now;
+
+         splashWriteIndex = (splashWriteIndex + 1) % maxSplashes;
+      }
+   }
+
+   lastCheckTime = now;
+
+   // Send updated splashes to GPU
+   glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, maxSplashes * sizeof(Splash), splashBuffer);
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void renderRain()
@@ -182,12 +245,7 @@ void renderRain()
    glUseProgram(rainShader);
 
    glUniform1f(glGetUniformLocation(rainShader, "uTime"), rainTime);
-   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), 30.0f);
-
-   glUniform1f(glGetUniformLocation(rainShader, "windStrength"), 0.25f);
-   glUniform1f(glGetUniformLocation(rainShader, "turbulenceAmp"), 0.12f);
-   glUniform1f(glGetUniformLocation(rainShader, "turbulenceFreq"), 12.0f);
-   glUniform1f(glGetUniformLocation(rainShader, "turbulenceSpeed"), 4.0f);
+   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), rainHeight);
 
    glEnable(GL_POINT_SPRITE);
    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
@@ -196,21 +254,37 @@ void renderRain()
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   glDepthMask(GL_FALSE);
 
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
-
    glEnableVertexAttribArray(0);
-   glVertexAttribPointer(
-       0, 4, GL_FLOAT, GL_FALSE,
-       sizeof(Drop), (void *)0);
-
+   glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Drop), (void *)0);
    glDrawArrays(GL_POINTS, 0, numRainDrops);
-
    glDisableVertexAttribArray(0);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-   glDepthMask(GL_TRUE);
+   glUseProgram(0);
+}
+
+void renderSplashes()
+{
+   glUseProgram(splashShader);
+
+   glUniform1f(glGetUniformLocation(splashShader, "uTime"), rainTime);
+
+   glEnable(GL_POINT_SPRITE);
+   glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
+   glEnableVertexAttribArray(0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Splash), (void *)0);
+   glDrawArrays(GL_POINTS, 0, maxSplashes);
+   glDisableVertexAttribArray(0);
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+
    glUseProgram(0);
 }
 
@@ -520,7 +594,9 @@ void display(SDL_Window *window)
    // Only render rain in night mode
    if (dayNightMode == 1)
    {
-      renderRain();
+      checkForSplashes(0.05); // Detects ground hits
+      renderRain();           // Draw rain
+      renderSplashes();       // Draw splashes
    }
 
    //  Draw axes - no lighting
@@ -811,6 +887,7 @@ int main(int argc, char *argv[])
    // Create rain shader (works on macOS without GLEW)
    printf("Creating rain shader...\n");
    rainShader = CreateShaderProg("rain.vert", "rain.frag");
+   splashShader = CreateShaderProg("splash.vert", "splash.frag");
    printf("Rain shader created: %d\n", rainShader);
    ErrCheck("init");
    while (run)

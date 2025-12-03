@@ -6,22 +6,16 @@ void main()
 
     // Horizontal thinness
     float xDist = abs(uv.x - 0.5);
-
-    // Pixel-dependent thinness (ensures crisp streaks)
-    float px = fwidth(uv.x);
-    float width = px * 0.4;
-
-    float alphaX = 1.0 - smoothstep(width, width * 3.0, xDist);
+    float alphaX = 1.0 - smoothstep(0.01, 0.02, xDist);
 
     // Vertical gradient (head = bright, tail = fade)
-    float head = smoothstep(0.0, 0.1, uv.y);
-    float tail = smoothstep(1.0, 0.9, uv.y);
+    float tail = smoothstep(0.0, 0.4, uv.y);
 
-    float alpha = alphaX * head * tail * gl_Color.a;
+    float alpha = alphaX * tail * gl_Color.a;
 
     if (alpha < 0.03)
         discard;
 
-    vec3 rainColor = vec3(0.75, 0.85, 1.0);
-    gl_FragColor = vec4(rainColor, alpha);
+    vec3 rainColor = vec3(0.9, 0.90, 1.0);
+    gl_FragColor = vec4(rainColor, alpha * 0.8);
 }
