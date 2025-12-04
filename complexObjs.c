@@ -127,6 +127,29 @@ void GetRotationObj()
         }
         glEnd();
     }
+    // circular end cap at X = -0.526
+    double end_x = curve[50][0]; // x = -0.526
+    double end_z = curve[50][2]; // z = 0.360 (radius of circle)
+
+    glBegin(GL_TRIANGLE_FAN);
+
+    // Normal points in -X direction
+    glNormal3f(-1, 0, 0);
+    glVertex3f(end_x, 0, 0); // Center of the circle
+
+    // Draw circle around the X-axis
+    for (int j = 0; j <= NUM_ROTATIONS; j++)
+    {
+        double angle = -180.0 + (180.0 * j / NUM_ROTATIONS);
+        double theta = angle * M_PI / 180.0;
+
+        double y = -end_z * sin(theta);
+        double z = end_z * cos(theta);
+
+        glNormal3f(-1, 0, 0);
+        glVertex3f(end_x, y, z);
+    }
+    glEnd();
 }
 
 void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking)

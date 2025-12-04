@@ -151,6 +151,13 @@ float ylight = 4;                 // Elevation of light
 unsigned int texture[11];         // Texture names
 unsigned int barricadeTexture[5]; // Barricade Texture names
 
+Mix_Music *rainBG;
+// Mix_Chunk *engineStart;
+Mix_Chunk *engineAcc;
+int firstAcc = 0;
+int engineChannel;
+int engineAccChannel;
+
 void reshape(SDL_Window *window)
 {
    int width, height;
@@ -290,6 +297,9 @@ void ApplyFog()
 {
    if (dayNightMode == 1) // Night mode - enable fog
    {
+      if (!Mix_PlayingMusic())      // Play only once
+         Mix_PlayMusic(rainBG, -1); // Loop rain
+
       glEnable(GL_FOG);
 
       GLfloat fogColor[4] = {0.65f, 0.70f, 0.75f, 1.0f};
@@ -310,6 +320,7 @@ void ApplyFog()
    }
    else // Remove fog in day mode
    {
+      Mix_FadeOutMusic(1000); // Fade out rain
       glDisable(GL_FOG);
    }
 }
@@ -729,6 +740,9 @@ void update()
       int isTurning = 0;
       if (keys[SDL_SCANCODE_SPACE]) // Forward with acceleration
       {
+         // Mix_FadeOutChannel(engineChannel, 500);
+
+         Mix_FadeOutChannel(engineAccChannel, 500);
          deceleration = 0.021; // Stronger deceleration when braking
          isBraking = 1;        // for brake lights
       }
@@ -740,6 +754,13 @@ void update()
       if (keys[SDL_SCANCODE_W]) // Forward with acceleration
       {
          carVelocity += acceleration;
+         if (carVelocity > 0 && firstAcc == 0)
+         {
+            // engineChannel = Mix_PlayChannel(0, engineStart, 0);  // play once
+            engineAccChannel = Mix_PlayChannel(1, engineAcc, 0); // play once it start
+            firstAcc = 1;
+         }
+
          if (carVelocity > maxVelocity)
             carVelocity = maxVelocity;
          isAccelerating = 1;
@@ -747,8 +768,12 @@ void update()
       if (keys[SDL_SCANCODE_S]) // Backward with acceleration
       {
          carVelocity -= acceleration;
+         // Mix_FadeOutChannel(engineChannel, 500);
+         Mix_FadeOutChannel(engineAccChannel, 1000);
          if (carVelocity < -maxVelocity * 0.5)
+         {
             carVelocity = -maxVelocity * 0.5;
+         }
          isBraking = 1;
          isAccelerating = 1;
       }
@@ -806,7 +831,11 @@ void update()
    {
       carVelocity += deceleration;
       if (carVelocity > 0)
+      {
+         Mix_FadeOutChannel(engineAccChannel, 200);
          carVelocity = 0;
+         firstAcc = 0;
+      }
    }
 
    // Update car position based on velocity
@@ -957,6 +986,24 @@ int main(int argc, char *argv[])
    rainShader = CreateShaderProg("rain.vert", "rain.frag");
    splashShader = CreateShaderProg("splash.vert", "splash.frag");
    ErrCheck("init");
+
+   //  Initialize audio
+   Mix_Init(MIX_INIT_MP3);
+
+   if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048))
+      Fatal("Cannot initialize audio\n");
+   Mix_AllocateChannels(8);
+   //  Load "The Wall"
+   rainBG = Mix_LoadMUS("rainBG.mp3");
+   if (!rainBG)
+      Fatal("Cannot load rainBG.mp3\n");
+   // engineStart = Mix_LoadWAV("carEngine.mp3");
+   // if (!engineStart)
+   //    Fatal("Cannot load carEngine.mp3\n");
+   engineAcc = Mix_LoadWAV("carAcc.mp3"); // yes, MP3 works if mpg123 enabled
+   if (!engineAcc)
+      Fatal("Cannot load carAcc.mp3\n");
+
    while (run)
    {
       //  Elapsed time in seconds
