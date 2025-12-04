@@ -545,6 +545,14 @@ void display(SDL_Window *window)
       drawGrandStand();
       glPopMatrix();
 
+      // 3rd Stand
+      glPushMatrix();
+      glTranslated(35, 0, 25);
+      glRotatef(90, 0, 1, 0);
+      glScalef(1.0f, 1.0f, 1.0f);
+      drawGrandStand();
+      glPopMatrix();
+
       // support banner with textures
       glPushMatrix();
       glTranslated(33, 0, 20);
