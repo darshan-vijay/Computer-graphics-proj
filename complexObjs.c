@@ -768,138 +768,6 @@ void drawTireBarrierRow(double startX, double y, double z, int count, double spa
     }
 }
 
-// Function to draw a building with windows
-void drawStand(double x, double y, double z, double width, double height, double depth, unsigned int texture[])
-{
-    // Main building block
-    SetMaterial(0.14, 0.14, 0.14, // ambient
-                0.6, 0.6, 0.6,    // diffuse
-                0.2, 0.2, 0.2,    // low specular
-                10);              // low shininess
-    glColor3f(1, 1, 1);
-
-    // Enable texture
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glBindTexture(GL_TEXTURE_2D, texture[1]); // Concrete texture
-
-    // Draw textured cube
-    glPushMatrix();
-    glTranslated(x, y + height / 2, z);
-    glScaled(width / 2, height / 2, depth / 2);
-
-    glBegin(GL_QUADS);
-    // Front
-    glNormal3f(0, 0, 1);
-    glTexCoord2f(0, 0);
-    glVertex3f(-1, -1, 1);
-    glTexCoord2f(100, 0);
-    glVertex3f(+1, -1, 1);
-    glTexCoord2f(100, 100);
-    glVertex3f(+1, +1, 1);
-    glTexCoord2f(0, 100);
-    glVertex3f(-1, +1, 1);
-
-    // Back
-    glNormal3f(0, 0, -1);
-    glTexCoord2f(0, 0);
-    glVertex3f(+1, -1, -1);
-    glTexCoord2f(100, 0);
-    glVertex3f(-1, -1, -1);
-    glTexCoord2f(100, 100);
-    glVertex3f(-1, +1, -1);
-    glTexCoord2f(0, 100);
-    glVertex3f(+1, +1, -1);
-
-    // Right
-    glNormal3f(+1, 0, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(+1, -1, +1);
-    glTexCoord2f(100, 0);
-    glVertex3f(+1, -1, -1);
-    glTexCoord2f(100, 100);
-    glVertex3f(+1, +1, -1);
-    glTexCoord2f(0, 100);
-    glVertex3f(+1, +1, +1);
-
-    // Left
-    glNormal3f(-1, 0, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(-1, -1, -1);
-    glTexCoord2f(100, 0);
-    glVertex3f(-1, -1, +1);
-    glTexCoord2f(100, 100);
-    glVertex3f(-1, +1, +1);
-    glTexCoord2f(0, 100);
-    glVertex3f(-1, +1, -1);
-
-    // Top
-    glNormal3f(0, +1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(-1, +1, +1);
-    glTexCoord2f(100, 0);
-    glVertex3f(+1, +1, +1);
-    glTexCoord2f(100, 100);
-    glVertex3f(+1, +1, -1);
-    glTexCoord2f(0, 100);
-    glVertex3f(-1, +1, -1);
-
-    // Bottom
-    glNormal3f(0, -1, 0);
-    glTexCoord2f(0, 0);
-    glVertex3f(-1, -1, -1);
-    glTexCoord2f(100, 0);
-    glVertex3f(+1, -1, -1);
-    glTexCoord2f(100, 100);
-    glVertex3f(+1, -1, +1);
-    glTexCoord2f(0, 100);
-    glVertex3f(-1, -1, +1);
-    glEnd();
-
-    glPopMatrix();
-
-    glDisable(GL_TEXTURE_2D);
-
-    int rows = 5;
-    int cols = 6;
-    double winW = (width / cols) * 0.6;
-    double winH = (height / rows) * 0.6;
-    double inset = 0.01;
-    SetMaterial(0.1, 0.2, 0.4, //  ambient
-                0.2, 0.4, 0.8, // diffuse
-                0.5, 0.5, 0.5, // Medium specular
-                80);           // Low shininess
-    glColor3f(0.2, 0.4, 0.8);
-
-    // Front & back faces
-    for (int i = 1; i <= cols; i++)
-    {
-        for (int j = 1; j <= rows; j++)
-        {
-            double wx = x - width / 2 + (i - 0.5) * (width / cols);
-            double wy = y + (j - 0.5) * (height / rows);
-
-            // Front
-            glBegin(GL_QUADS);
-            glNormal3f(0, 0, 1);
-            glVertex3f(wx - winW / 2, wy - winH / 2, z + depth / 2 + inset);
-            glVertex3f(wx + winW / 2, wy - winH / 2, z + depth / 2 + inset);
-            glVertex3f(wx + winW / 2, wy + winH / 2, z + depth / 2 + inset);
-            glVertex3f(wx - winW / 2, wy + winH / 2, z + depth / 2 + inset);
-            glEnd();
-
-            // Back
-            glBegin(GL_QUADS);
-            glNormal3f(0, 0, -1);
-            glVertex3f(wx - winW / 2, wy - winH / 2, z - depth / 2 - inset);
-            glVertex3f(wx + winW / 2, wy - winH / 2, z - depth / 2 - inset);
-            glVertex3f(wx + winW / 2, wy + winH / 2, z - depth / 2 - inset);
-            glVertex3f(wx - winW / 2, wy + winH / 2, z - depth / 2 - inset);
-            glEnd();
-        }
-    }
-}
-
 // Draw a road block with barricades on edges
 void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures)
 {
@@ -1509,32 +1377,32 @@ void drawTrafficLight()
                 1.0, 0.0, 0.0, // diffuse (bright red)
                 1.0, 0.5, 0.5, // specular (shiny red)
                 100.0);        // shininess
-    // Manually set emission for glow
+    // Set emission for glow
     float redEmission[] = {0.8, 0.0, 0.0, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
     sphere(0, 0, 0, 0.8);
     glPopMatrix();
 
-    // Yellow light (middle) - glowing yellow
+    // Red light (middle) - glowing Red
     glPushMatrix();
     glTranslatef(-0.5, 0, 0);
     SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
                 1.0, 0.0, 0.0, // diffuse (bright red)
                 1.0, 0.5, 0.5, // specular (shiny red)
                 100.0);        // shininess
-    // Manually set emission for glow
+    // Set emission for glow
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
     sphere(0, 0, 0, 0.8);
     glPopMatrix();
 
-    // Green light (bottom) - glowing green
+    // Red light (bottom) - glowing Red
     glPushMatrix();
     glTranslatef(-0.5, -1.5, 0);
     SetMaterial(0.3, 0.0, 0.0, // ambient (dark red)
                 1.0, 0.0, 0.0, // diffuse (bright red)
                 1.0, 0.5, 0.5, // specular (shiny red)
                 100.0);        // shininess
-    // Manually set emission for glow
+    // Set emission for glow
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
     sphere(0, 0, 0, 0.8);
     glPopMatrix();
@@ -1613,7 +1481,7 @@ void drawCamera()
                 1.0, 0.0, 0.0, // diffuse (bright red)
                 1.0, 0.5, 0.5, // specular (shiny red)
                 100.0);        // shininess
-    // Manually set emission for glow
+    // Set emission for glow
     float redEmission[] = {0.8, 0.0, 0.0, 1.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redEmission);
     cube(0, 0, 0, 0.04, 0.04, 0.04, 0, 0, 0, 0);
@@ -1633,7 +1501,7 @@ void drawLampFixture()
     glTranslatef(0, 0, 0);
     glRotatef(-90, 1, 0, 0); // dome faces downward
 
-    // --- DRAW DOME (with material properties) ---
+    // hemisphere
     SetMaterial(0.1, 0.1, 0.1, // Dark ambient
                 0.3, 0.3, 0.3, // Grey diffuse
                 0.6, 0.6, 0.6, // Shiny specular
@@ -1676,7 +1544,7 @@ void drawLampFixture()
         glEnd();
     }
 
-    // --- EMISSIVE CIRCULAR BASE ---
+    // emissive base
     // Set bright emissive material
     SetMaterial(1.0, 1.0, 0.3, // Yellow ambient
                 1.0, 1.0, 0.3, // Yellow diffuse
