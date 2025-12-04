@@ -26,7 +26,7 @@ void GetBezierPoints(double t, double result[3])
     result[1] = b0 * P[0][1] + b1 * P[1][1] + b2 * P[2][1];
     result[2] = b0 * P[0][2] + b1 * P[1][2] + b2 * P[2][2];
 }
-
+// draws the first curve and stores the points
 void GetBezierCurve()
 {
     // Evaluate curve at all 50 points

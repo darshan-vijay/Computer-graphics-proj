@@ -741,7 +741,6 @@ void update()
       if (keys[SDL_SCANCODE_SPACE]) // Forward with acceleration
       {
          // Mix_FadeOutChannel(engineChannel, 500);
-
          Mix_FadeOutChannel(engineAccChannel, 500);
          deceleration = 0.021; // Stronger deceleration when braking
          isBraking = 1;        // for brake lights
@@ -757,6 +756,7 @@ void update()
          if (carVelocity > 0 && firstAcc == 0)
          {
             // engineChannel = Mix_PlayChannel(0, engineStart, 0);  // play once
+            Mix_HaltChannel(engineAccChannel);
             engineAccChannel = Mix_PlayChannel(1, engineAcc, 0); // play once it start
             firstAcc = 1;
          }
@@ -768,8 +768,8 @@ void update()
       if (keys[SDL_SCANCODE_S]) // Backward with acceleration
       {
          carVelocity -= acceleration;
-         // Mix_FadeOutChannel(engineChannel, 500);
          Mix_FadeOutChannel(engineAccChannel, 1000);
+         firstAcc = 0;
          if (carVelocity < -maxVelocity * 0.5)
          {
             carVelocity = -maxVelocity * 0.5;
@@ -825,14 +825,20 @@ void update()
    {
       carVelocity -= deceleration;
       if (carVelocity < 0)
+      {
          carVelocity = 0;
+         firstAcc = 0;
+         if (Mix_Playing(engineAccChannel))
+            Mix_FadeOutChannel(engineAccChannel, 300);
+      }
    }
    else if (carVelocity < 0)
    {
       carVelocity += deceleration;
       if (carVelocity > 0)
       {
-         Mix_FadeOutChannel(engineAccChannel, 200);
+         if (Mix_Playing(engineAccChannel))
+            Mix_FadeOutChannel(engineAccChannel, 300);
          carVelocity = 0;
          firstAcc = 0;
       }
@@ -844,6 +850,12 @@ void update()
       double radRot = (90.0 + headingAngle) * M_PI / 180.0;
       mclarenX += carVelocity * sin(radRot);
       mclarenZ += carVelocity * cos(radRot);
+   }
+   else
+   {
+      if (Mix_Playing(engineAccChannel))
+         Mix_FadeOutChannel(engineAccChannel, 300);
+      firstAcc = 0;
    }
 
    // POV positions moves according to car position
@@ -875,15 +887,21 @@ int key()
    {
       mode = (mode + 1) % 3;
       if (mode == 0)
-         dim = 2;
+      {
+         dim = 8;
+         th = 105;
+         ph = 20;
+      }
       else if (mode == 1)
       {
+         perspective = 0;
          dim = 10;
          th = -25;
          ph = 10;
       }
       else
       {
+         perspective = 0;
          dim = 4;
          th = -125;
          ph = 15;
@@ -891,7 +909,16 @@ int key()
    }
    //  Switch projection mode
    else if (keys[SDL_SCANCODE_P])
-      perspective = (perspective + 1) % 3;
+   {
+      if (mode > 0)
+      {
+         perspective = 0;
+      }
+      else
+      {
+         perspective = (perspective + 1) % 3;
+      }
+   }
    //  Toggle lighting
    else if (keys[SDL_SCANCODE_L])
       light = !light;
