@@ -33,46 +33,42 @@ double dim = 8;      //  Size of world
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
 const char *textPers[] = {"Perspective", "POV"};
 
+// for Shaders rain and splash
 typedef struct
 {
-   float offsetX;
-   float offsetZ;
+   float xPos;
+   float zPos;
    float speed;
    float length;
-} Drop;
+} DropData;
 
 typedef struct
 {
-   float offsetX;
-   float offsetZ;
-   float birthTime;
-} Splash;
+   float xPos;
+   float zPos;
+   float collisionTime;
+} SplashData;
 
-// Configuration
 int numRainDrops = 7000;
 int maxSplashes = 300;
 float rainHeight = 30.0f;
 float rainArea = 120.0f;
 
-// GPU buffers
 GLuint rainVBO;
 GLuint splashVBO;
 GLuint rainShader, splashShader;
 
-// Data
-Splash *splashBuffer;
+SplashData *splashBuffer;
 int splashWriteIndex = 0;
-Drop *rainDrops = NULL;
+DropData *rainDrops = NULL;
 
-// Timing
+// For rain animation
 float rainTime = 0.0f;
 float lastCheckTime = -1.0f;
 
-int useRain = 1;
-
 float fogIntensity = 0.04f;
 
-int dayNightMode = 0; // 0 = day, 1 = night
+int dayNightMode = 1; // 0 = day, 1 = night
 const char *textDayNight[] = {"Day", "Night"};
 GLuint nightSky[6]; // Night skybox textures
 GLuint mornSky[6];  // Morning skybox textures
@@ -114,13 +110,13 @@ double mclarenX = 4.0;
 double mclarenY = 0.0;
 double mclarenZ = 1;
 
-double carHeading = 0.0;   // Actual direction car is facing (for movement)
+double headingAngle = 0.0; // Actual direction car is facing (for movement)
 double carVelocity = 0.0;  // Current forward velocity
 double maxVelocity = 0.15; // Maximum velocity
 
 double acceleration = 0.02;  // Acceleration rate
 double deceleration = 0.008; // Deceleration/friction
-double turnSpeed = 0.8;      // Degrees per key press
+double turnDegrees = 0.8;    // Degrees per key press
 
 // Steering and braking
 double steeringAngle = 0.0; // Current steering angle for front wheels
@@ -133,8 +129,8 @@ double povZ = 0.5;  // POV Z
 void updatePOVPosition()
 {
    // Camera is positioned behind the car's current heading
-   double radHeading = (90.0 + carHeading) * M_PI / 180.0;
-   double offsetDistance = 2.0; // Distance behind car
+   double radHeading = (90.0 + headingAngle) * M_PI / 180.0; // adding 90 because the car model faces +X initially
+   double offsetDistance = 2.0;                              // Distance behind car
 
    povX = mclarenX - offsetDistance * sin(radHeading);
    povY = mclarenY + 0.45; // Height above car
@@ -167,39 +163,42 @@ void reshape(SDL_Window *window)
    Project(perspective, fov, asp, dim);
 }
 
-void setupRain()
+// This function calculates initial rain drop positions and speeds at random within a defined area
+void calculateRainPositions()
 {
-   rainDrops = (Drop *)malloc(numRainDrops * sizeof(Drop));
-   srand(time(NULL));
+   rainDrops = (DropData *)malloc(numRainDrops * sizeof(DropData)); // Allocate memory for rain drops
 
+   // Calculate random positions and speeds
    for (int i = 0; i < numRainDrops; i++)
    {
-      float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-      float rz = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+      float rx = ((float)rand() / RAND_MAX) * 2.0f - 1.0f; // Random X between -1 and 1
+      float rz = ((float)rand() / RAND_MAX) * 2.0f - 1.0f; // Random Z between -1 and 1
 
-      rainDrops[i].offsetX = rx * (rainArea * 0.5f);
-      rainDrops[i].offsetZ = rz * (rainArea * 0.5f);
-      rainDrops[i].speed = 8.0f + ((float)rand() / RAND_MAX) * 6.0f;
-      rainDrops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f;
+      rainDrops[i].xPos = rx * (rainArea * 0.5f); // Spread over -rainArea/2 till rainArea/2
+      rainDrops[i].zPos = rz * (rainArea * 0.5f);
+      rainDrops[i].speed = 8.0f + ((float)rand() / RAND_MAX) * 6.0f;  // from 8 to 14 units/sec
+      rainDrops[i].length = 0.2f + ((float)rand() / RAND_MAX) * 0.6f; // from 0.2 to 0.8 units
    }
 
-   glGenBuffers(1, &rainVBO);
-   glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
-   glBufferData(GL_ARRAY_BUFFER, numRainDrops * sizeof(Drop), rainDrops, GL_STATIC_DRAW);
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glGenBuffers(1, &rainVBO);                                                                 // Generate VBO for rain drops
+   glBindBuffer(GL_ARRAY_BUFFER, rainVBO);                                                    // Select the buffer
+   glBufferData(GL_ARRAY_BUFFER, numRainDrops * sizeof(DropData), rainDrops, GL_STATIC_DRAW); // transfer data to GPU
+   glBindBuffer(GL_ARRAY_BUFFER, 0);                                                          // Unbind the buffer
 
-   splashBuffer = (Splash *)calloc(maxSplashes, sizeof(Splash));
+   // Splash buffer initialization
+   splashBuffer = (SplashData *)calloc(maxSplashes, sizeof(SplashData));
    for (int i = 0; i < maxSplashes; i++)
    {
-      splashBuffer[i].birthTime = -999.0f;
+      splashBuffer[i].collisionTime = -999.0f;
    }
-
+   // Setup splash VBO
    glGenBuffers(1, &splashVBO);
    glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
-   glBufferData(GL_ARRAY_BUFFER, maxSplashes * sizeof(Splash), splashBuffer, GL_DYNAMIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, maxSplashes * sizeof(SplashData), splashBuffer, GL_DYNAMIC_DRAW);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-void checkForSplashes(float deltaTime)
+
+void checkForSplashes()
 {
    if (lastCheckTime < 0)
    {
@@ -214,19 +213,16 @@ void checkForSplashes(float deltaTime)
    {
       float speed = rainDrops[i].speed;
 
-      // Where was the drop before?
+      // position of drop before and now
       float beforeY = rainHeight - fmod(before * speed, rainHeight);
-
-      // Where is the drop now?
       float nowY = rainHeight - fmod(now * speed, rainHeight);
 
-      // Did it cross the ground (Y = 0)?
+      // if it has crossed the ground level (Y=0) between last check and now
       if (beforeY > 0.5f && nowY <= 0.5f)
-      {
-         // YES! Make a splash at this X/Z location
-         splashBuffer[splashWriteIndex].offsetX = rainDrops[i].offsetX;
-         splashBuffer[splashWriteIndex].offsetZ = rainDrops[i].offsetZ;
-         splashBuffer[splashWriteIndex].birthTime = now;
+      { // Register a splash at this drop's X,Z position at current time
+         splashBuffer[splashWriteIndex].xPos = rainDrops[i].xPos;
+         splashBuffer[splashWriteIndex].zPos = rainDrops[i].zPos;
+         splashBuffer[splashWriteIndex].collisionTime = now;
 
          splashWriteIndex = (splashWriteIndex + 1) % maxSplashes;
       }
@@ -236,28 +232,28 @@ void checkForSplashes(float deltaTime)
 
    // Send updated splashes to GPU
    glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
-   glBufferSubData(GL_ARRAY_BUFFER, 0, maxSplashes * sizeof(Splash), splashBuffer);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, maxSplashes * sizeof(SplashData), splashBuffer);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void renderRain()
 {
    glUseProgram(rainShader);
-
-   glUniform1f(glGetUniformLocation(rainShader, "uTime"), rainTime);
-   glUniform1f(glGetUniformLocation(rainShader, "uHeight"), rainHeight);
-
+   // Send uniform variables
+   glUniform1f(glGetUniformLocation(rainShader, "currTime"), rainTime);
+   glUniform1f(glGetUniformLocation(rainShader, "height"), rainHeight);
+   // Enable point sprites and point size from shader
    glEnable(GL_POINT_SPRITE);
    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
    glEnable(GL_POINT_SMOOTH);
-
+   // Enable blending for transparency
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+   // Bind VBO and set vertex attribute
    glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
    glEnableVertexAttribArray(0);
-   glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Drop), (void *)0);
+   glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(DropData), (void *)0);
    glDrawArrays(GL_POINTS, 0, numRainDrops);
    glDisableVertexAttribArray(0);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -268,19 +264,21 @@ void renderRain()
 void renderSplashes()
 {
    glUseProgram(splashShader);
-
-   glUniform1f(glGetUniformLocation(splashShader, "uTime"), rainTime);
-
+   // Send uniform variables
+   glUniform1f(glGetUniformLocation(splashShader, "time"), rainTime);
+   // Enable point sprites and point size from shader
    glEnable(GL_POINT_SPRITE);
    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+   // Enable blending for transparency
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+   // Bind VBO and set vertex attribute
    glBindBuffer(GL_ARRAY_BUFFER, splashVBO);
    glEnableVertexAttribArray(0);
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Splash), (void *)0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SplashData), (void *)0);
    glDrawArrays(GL_POINTS, 0, maxSplashes);
    glDisableVertexAttribArray(0);
    glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -310,104 +308,107 @@ void ApplyFog()
          glFogf(GL_FOG_END, 40.0f);
       }
    }
-   else // Day mode - no fog
+   else // Remove fog in day mode
    {
       glDisable(GL_FOG);
    }
 }
 
-void DrawSkybox(float size, GLuint *skyTextures)
+void DrawSkybox(float boxSize, GLuint *skyTextures)
 {
+   glPushMatrix();
+   glScaled(boxSize, boxSize, boxSize);
+   glColor3f(1, 1, 1);
+
    glPushAttrib(GL_ENABLE_BIT);
 
    glDisable(GL_FOG);
    glDisable(GL_LIGHTING);
    glDisable(GL_CULL_FACE);
-   glDepthMask(GL_FALSE); // Don't write to depth buffer
-
+   glDepthMask(GL_FALSE);
    glEnable(GL_TEXTURE_2D);
-   glColor3f(1, 1, 1); // Make sure color is white
 
-   // +X (right)  px
+   // Side face  +X  px
    glBindTexture(GL_TEXTURE_2D, skyTextures[0]);
    glBegin(GL_QUADS);
    glTexCoord2f(1, 0);
-   glVertex3f(size, -size, -size);
+   glVertex3f(1, -1, -1);
    glTexCoord2f(0, 0);
-   glVertex3f(size, -size, size);
+   glVertex3f(1, -1, 1);
    glTexCoord2f(0, 1);
-   glVertex3f(size, size, size);
+   glVertex3f(1, 1, 1);
    glTexCoord2f(1, 1);
-   glVertex3f(size, size, -size);
+   glVertex3f(1, 1, -1);
    glEnd();
 
-   // -X (left)   nx
+   // Side face -X nx
    glBindTexture(GL_TEXTURE_2D, skyTextures[1]);
    glBegin(GL_QUADS);
    glTexCoord2f(1, 0);
-   glVertex3f(-size, -size, size);
+   glVertex3f(-1, -1, 1);
    glTexCoord2f(0, 0);
-   glVertex3f(-size, -size, -size);
+   glVertex3f(-1, -1, -1);
    glTexCoord2f(0, 1);
-   glVertex3f(-size, size, -size);
+   glVertex3f(-1, 1, -1);
    glTexCoord2f(1, 1);
-   glVertex3f(-size, size, size);
+   glVertex3f(-1, 1, 1);
    glEnd();
 
-   // +Y (top)    py
+   // Top face +Y py
    glBindTexture(GL_TEXTURE_2D, skyTextures[2]);
    glBegin(GL_QUADS);
    glTexCoord2f(0, 1);
-   glVertex3f(-size, size, -size);
+   glVertex3f(-1, 1, -1);
    glTexCoord2f(1, 1);
-   glVertex3f(size, size, -size);
+   glVertex3f(1, 1, -1);
    glTexCoord2f(1, 0);
-   glVertex3f(size, size, size);
+   glVertex3f(1, 1, 1);
    glTexCoord2f(0, 0);
-   glVertex3f(-size, size, size);
+   glVertex3f(-1, 1, 1);
    glEnd();
 
-   // -Y (bottom) ny
+   // bottom face  -Y ny
    glBindTexture(GL_TEXTURE_2D, skyTextures[3]);
    glBegin(GL_QUADS);
    glTexCoord2f(0, 0);
-   glVertex3f(-size, -size, size);
+   glVertex3f(-1, -1, 1);
    glTexCoord2f(1, 0);
-   glVertex3f(size, -size, size);
+   glVertex3f(1, -1, 1);
    glTexCoord2f(1, 1);
-   glVertex3f(size, -size, -size);
+   glVertex3f(1, -1, -1);
    glTexCoord2f(0, 1);
-   glVertex3f(-size, -size, -size);
+   glVertex3f(-1, -1, -1);
    glEnd();
 
-   // +Z (front)  pz
+   // front face +Z pz
    glBindTexture(GL_TEXTURE_2D, skyTextures[4]);
    glBegin(GL_QUADS);
    glTexCoord2f(0, 0);
-   glVertex3f(-size, -size, size);
+   glVertex3f(-1, -1, 1);
    glTexCoord2f(1, 0);
-   glVertex3f(size, -size, size);
+   glVertex3f(1, -1, 1);
    glTexCoord2f(1, 1);
-   glVertex3f(size, size, size);
+   glVertex3f(1, 1, 1);
    glTexCoord2f(0, 1);
-   glVertex3f(-size, size, size);
+   glVertex3f(-1, 1, 1);
    glEnd();
 
-   // -Z (back)   nz
+   // back face -Z nz
    glBindTexture(GL_TEXTURE_2D, skyTextures[5]);
    glBegin(GL_QUADS);
    glTexCoord2f(0, 0);
-   glVertex3f(size, -size, -size);
+   glVertex3f(1, -1, -1);
    glTexCoord2f(1, 0);
-   glVertex3f(-size, -size, -size);
+   glVertex3f(-1, -1, -1);
    glTexCoord2f(1, 1);
-   glVertex3f(-size, size, -size);
+   glVertex3f(-1, 1, -1);
    glTexCoord2f(0, 1);
-   glVertex3f(size, size, -size);
+   glVertex3f(1, 1, -1);
    glEnd();
 
    glDepthMask(GL_TRUE);
    glPopAttrib();
+   glPopMatrix();
 }
 
 /*
@@ -436,7 +437,7 @@ void display(SDL_Window *window)
       double Ez = +2 * dim * Cos(th) * Cos(ph);
       gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
 
-      // Draw skybox at camera origin (before any other translations)
+      // Draw skybox at camera origin
       glPushMatrix();
       glTranslatef(Ex, Ey, Ez);
       DrawSkybox(70.0f, currentSky);
@@ -466,9 +467,9 @@ void display(SDL_Window *window)
    //  Light switch
    if (light)
    {
-      //  Translate intensity to color vectors - adjust for day/night
-      float ambientLevel = (dayNightMode == 0) ? ambient : ambient * 0.7; // Dimmer at night
-      float diffuseLevel = (dayNightMode == 0) ? diffuse : diffuse * 0.7;
+
+      float ambientLevel = (dayNightMode == 0) ? ambient : ambient * 0.5; // Dimmer at night
+      float diffuseLevel = (dayNightMode == 0) ? diffuse : diffuse * 0.5;
 
       float Ambient[] = {0.01 * ambientLevel, 0.01 * ambientLevel, 0.01 * ambientLevel, 1.0};
       float Diffuse[] = {0.01 * diffuseLevel, 0.01 * diffuseLevel, 0.01 * diffuseLevel, 1.0};
@@ -478,9 +479,8 @@ void display(SDL_Window *window)
       //  Draw light position as ball (still no lighting here)
       glColor3f(1, 1, 1);
       ball(Position[0], Position[1], Position[2], 0.1);
-      //  OpenGL should normalize normal vectors
+      //  Enable lighting with normalization
       glEnable(GL_NORMALIZE);
-      //  Enable lighting
       glEnable(GL_LIGHTING);
       //  Location of viewer for specular calculations
       glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, local);
@@ -540,7 +540,7 @@ void display(SDL_Window *window)
       // McLaren car - moving car
       glPushMatrix();
       glTranslated(mclarenX, mclarenY, mclarenZ);
-      glRotated(carHeading, 0, 1, 0); // heading direction
+      glRotated(headingAngle, 0, 1, 0); // heading direction
       glScaled(0.2, 0.2, 0.2);
       drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking);
       glPopMatrix();
@@ -594,9 +594,9 @@ void display(SDL_Window *window)
    // Only render rain in night mode
    if (dayNightMode == 1)
    {
-      checkForSplashes(0.05); // Detects ground hits
-      renderRain();           // Draw rain
-      renderSplashes();       // Draw splashes
+      checkForSplashes(); // Detects ground hits
+      renderRain();       // Draw rain
+      renderSplashes();   // Draw splashes
    }
 
    //  Draw axes - no lighting
@@ -625,7 +625,7 @@ void display(SDL_Window *window)
    glWindowPos2i(5, 5);
    //  Print the text string
    Print("Angle=%d,%d, Perspective=%s, Mode=%s, Time=%s, Velocity=%.2f, Heading=%.1f, Steering=%.1f",
-         th, ph, textPers[perspective], text[mode], textDayNight[dayNightMode], carVelocity, carHeading, steeringAngle);
+         th, ph, textPers[perspective], text[mode], textDayNight[dayNightMode], carVelocity, headingAngle, steeringAngle);
 
    ErrCheck("display");
    glFlush();
@@ -642,7 +642,7 @@ void update()
    double t = (SDL_GetTicks() - startTime) / 1000.0;
    zh = fmod(90 * t, 360.0);
 
-   // Update rain animation
+   // update for rain animation
    rainTime += 0.05;
    if (rainTime > 1000.0)
       rainTime = 0.0;
@@ -650,19 +650,19 @@ void update()
    // Get keyboard state for smooth controls
    const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
-   // Handle car driving in POV mode - check EVERY frame
+   // Handle car driving in POV mode for each frame
    if (perspective == 1 && mode == 0)
    {
       int isAccelerating = 0;
       int isTurning = 0;
       if (keys[SDL_SCANCODE_SPACE]) // Forward with acceleration
       {
-         deceleration = 0.021;
-         isBraking = 1;
+         deceleration = 0.021; // Stronger deceleration when braking
+         isBraking = 1;        // for brake lights
       }
       else
       {
-         deceleration = 0.008;
+         deceleration = 0.008; // Normal deceleration
          isBraking = 0;
       }
       if (keys[SDL_SCANCODE_W]) // Forward with acceleration
@@ -687,9 +687,9 @@ void update()
          steeringAngle = -25.0;
          if (isAccelerating || fabs(carVelocity) > 0.01)
          {
-            carHeading += turnSpeed;
-            if (carHeading >= 360)
-               carHeading -= 360;
+            headingAngle += turnDegrees;
+            if (headingAngle >= 360)
+               headingAngle -= 360;
             isTurning = 1;
          }
       }
@@ -698,9 +698,9 @@ void update()
          steeringAngle = 25.0;
          if (isAccelerating || fabs(carVelocity) > 0.01)
          {
-            carHeading -= turnSpeed;
-            if (carHeading < 0)
-               carHeading += 360;
+            headingAngle -= turnDegrees;
+            if (headingAngle < 0)
+               headingAngle += 360;
             isTurning = 1;
          }
       }
@@ -723,7 +723,7 @@ void update()
       }
    }
 
-   // Apply friction when not accelerating
+   // Apply friction at every point in time
    if (carVelocity >= 0)
    {
       carVelocity -= deceleration;
@@ -740,12 +740,12 @@ void update()
    // Update car position based on velocity
    if (fabs(carVelocity) > 0.001)
    {
-      double radRot = (90.0 + carHeading) * M_PI / 180.0;
+      double radRot = (90.0 + headingAngle) * M_PI / 180.0;
       mclarenX += carVelocity * sin(radRot);
       mclarenZ += carVelocity * cos(radRot);
    }
 
-   // Always update POV position to follow car
+   // POV positions moves according to car position
    updatePOVPosition();
 }
 
@@ -766,9 +766,6 @@ int key()
       th = 105;
       ph = 20;
    }
-   //  Toggle rain
-   else if (keys[SDL_SCANCODE_R])
-      useRain = !useRain;
    //  Toggle Day/Night
    else if (keys[SDL_SCANCODE_N])
       dayNightMode = (dayNightMode + 1) % 2;
@@ -882,13 +879,11 @@ int main(int argc, char *argv[])
    nightSky[5] = LoadTexBMP("nzNight.bmp"); // back
 
    // Initialize rain system
-   setupRain();
+   calculateRainPositions();
 
-   // Create rain shader (works on macOS without GLEW)
-   printf("Creating rain shader...\n");
+   // Create rain shader and splash shader
    rainShader = CreateShaderProg("rain.vert", "rain.frag");
    splashShader = CreateShaderProg("splash.vert", "splash.frag");
-   printf("Rain shader created: %d\n", rainShader);
    ErrCheck("init");
    while (run)
    {

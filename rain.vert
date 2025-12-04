@@ -1,28 +1,29 @@
 #version 120
 
-attribute vec4 rainData;  // (offsetX, offsetZ, speed, length)
+attribute vec4 rainData;  // (xPos, yPos, speed, length)
 
-uniform float uTime;
-uniform float uHeight;
+uniform float currTime;
+uniform float height;
 
 void main()
 {
-    float offsetX = rainData.x;
-    float offsetZ = rainData.y;
+    float xPos = rainData.x;
+    float yPos = rainData.y;
     float speed   = rainData.z;
     float length  = rainData.w;
 
-    // Calculate falling motion
-    float fall = mod(uTime * speed, uHeight);
-    float y = uHeight - fall;
+    // Calculate fall
+    float fall = mod(currTime * speed, height);
+    float y = height - fall;
 
-    // Follow camera
-    vec3 pos = vec3(offsetX, 
+    // get the position
+    vec3 pos = vec3(xPos, 
                     y, 
-                    offsetZ);
-    
+                    yPos);
+    //calculate the position of the drop
     gl_Position = gl_ModelViewProjectionMatrix * vec4(pos, 1.0);
-
+    //get the sprite square width using pointSize
     gl_PointSize = 30.0 + length * 50.0;
+    // set the alpha and color, to be available for frag shader
     gl_FrontColor = vec4(1.0, 1.0, 1.0, 0.7);
 }
