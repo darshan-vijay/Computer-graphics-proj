@@ -6,7 +6,8 @@
  *  Key bindings:
  *  p/P        Cycle through different Perspectives
  *  w/a/s/d    Move POV/Drive car (in POV mode)
- *  m/M        Cycle through different display modes
+ *  m/M        Cycle through different objects
+ *  n/N        Switch between Day and Night Mode
  *  q          Toggle axes
  *  arrows     Change view angle in perspective mode
  *  0          Reset view angle
@@ -15,15 +16,10 @@
  *  ]          Higher light
  *  l,L        Toggle light
  *  F3         Toggle light distance
+ *  
  *
  * use make command to get the binaries
  * ./final to view the project
- * Need to draw the grandstand and few types of stand modified to make it look more realistic.
- * The frame at the start line will have 4 types of components fixed (spotlight, sponsor banners).
- * Switching between different views based on camera position.
- * Simulate movement in other cars too.
- * Add lights.
- * Add textures to all objects.
- * Night mode with fog and rain effects - to be made proper.
- *
+ * Yet to simulate movement in other cars too.
+ * Yet to add textures to all objects.
  */
