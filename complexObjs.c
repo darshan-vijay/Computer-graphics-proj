@@ -1,16 +1,17 @@
 #include "CSCIx229.h"
 
-#define NUM_CURVE_POINTS 50
 #define NUM_ROTATIONS 50
 
+// points to trace the bezier curve
 double P[3][3] = {
     {0.255, 0.0, 0.0},
     {-0.102, 0.0, 0.470},
     {-0.526, 0.0, 0.360}};
 
-double curve[NUM_CURVE_POINTS + 1][3];
+double curve[50 + 1][3];
 
-void EvaluateBezier(double t, double result[3])
+// Code to get Bezier points
+void GetBezierPoints(double t, double result[3])
 {
     double t2 = t * t;
     double mt = 1.0 - t;
@@ -26,45 +27,46 @@ void EvaluateBezier(double t, double result[3])
     result[2] = b0 * P[0][2] + b1 * P[1][2] + b2 * P[2][2];
 }
 
-void DrawBezierLine()
+void GetBezierCurve()
 {
-    // Evaluate curve at all sample points
-    for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+    // Evaluate curve at all 50 points
+    for (int i = 0; i <= 50; i++)
     {
-        double t = i / (double)NUM_CURVE_POINTS;
-        EvaluateBezier(t, curve[i]);
+        double t = i / (double)50;
+        GetBezierPoints(t, curve[i]);
     }
 
     // Draw the curve
     glLineWidth(3);
     glBegin(GL_LINE_STRIP);
-    for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+    for (int i = 0; i <= 50; i++)
         glVertex3f(curve[i][0], curve[i][1], curve[i][2]);
     glEnd();
     glLineWidth(1);
 }
 
-void DrawRotationObject()
+void GetRotationObj()
 {
 
     // Rotate from -180 to 0 degrees
     for (int j = 0; j < NUM_ROTATIONS; j++)
     {
+        // degree intervals
         double angle1 = -180.0 + (180.0 * j / NUM_ROTATIONS);
         double angle2 = -180.0 + (180.0 * (j + 1) / NUM_ROTATIONS);
 
         double theta1 = angle1 * M_PI / 180.0;
         double theta2 = angle2 * M_PI / 180.0;
-
+        // draw the quad
         glBegin(GL_QUAD_STRIP);
-        for (int i = 0; i <= NUM_CURVE_POINTS; i++)
+        for (int i = 0; i <= 50; i++)
         {
             double x = curve[i][0];
             double z = curve[i][2];
 
-            // Calculate tangent to the curve (derivative approximation)
+            // Calculate tangent to the curve
             double dx, dz;
-            if (i < NUM_CURVE_POINTS)
+            if (i < 50)
             {
                 dx = curve[i + 1][0] - curve[i][0];
                 dz = curve[i + 1][2] - curve[i][2];
@@ -75,7 +77,9 @@ void DrawRotationObject()
                 dz = curve[i][2] - curve[i - 1][2];
             }
 
-            // For surface of revolution around X-axis:
+            // For surface of revolution around X-axis
+            // get the perpendicular to the tanget by flipping to x and z values and changing sign
+            // apply rotation along x axis
             // Normal = (-dz, -dx*sin(θ), dx*cos(θ))
             double nx = -dz;
             double ny1 = -dx * sin(theta1);
@@ -123,39 +127,15 @@ void DrawRotationObject()
         }
         glEnd();
     }
-
-    // circular end cap at X = -0.526
-    double end_x = curve[NUM_CURVE_POINTS][0]; // x = -0.526
-    double end_z = curve[NUM_CURVE_POINTS][2]; // z = 0.360 (radius of circle)
-
-    glBegin(GL_TRIANGLE_FAN);
-
-    // Normal for end cap points in -X direction
-    glNormal3f(-1, 0, 0);
-    glVertex3f(end_x, 0, 0); // Center of the circle
-
-    // Draw circle around the X-axis
-    for (int j = 0; j <= NUM_ROTATIONS; j++)
-    {
-        double angle = -180.0 + (180.0 * j / NUM_ROTATIONS);
-        double theta = angle * M_PI / 180.0;
-
-        double y = -end_z * sin(theta);
-        double z = end_z * cos(theta);
-
-        glNormal3f(-1, 0, 0);
-        glVertex3f(end_x, y, z);
-    }
-    glEnd();
 }
 
 void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking)
 {
-    // colors[0] = body color
-    // colors[1] = fin/wing color (rear and front wings)
-    // colors[2] = reinforcement bar color
-    // steeringAngle - angle to rotate front wheels
-    // isBraking - 1 if braking, 0 otherwise (for brake light)
+    // colors[0] body color
+    // colors[1] fin/wing color (rear and front wings)
+    // colors[2] reinforcement bar color
+    // steeringAngle angle to rotate front wheels
+    // isBraking 1 if braking, 0 otherwise (for brake light)
 
     // Scaling factors
     float scaleX = length;
@@ -181,7 +161,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
               1.5);
     glPopMatrix();
 
-    // --- Second trapezoid front taper
+    // Second trapezoid front taper
     glPushMatrix();
     glTranslated(1.45, 0, 0);
     glRotated(-8, 0, 0, 1);
@@ -278,7 +258,7 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     if (isBraking)
     {
-        glEnable(GL_LIGHTING); // Re-enable lighting
+        glEnable(GL_LIGHTING); // Reenable lighting
     }
 
     // front wings
@@ -338,8 +318,8 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     glTranslated(-3.7, 0.15, 0);
     glRotatef(180, 0, 1, 0);
     glScalef(3, 2.2, 1);
-    DrawBezierLine();
-    DrawRotationObject();
+    GetBezierCurve();
+    GetRotationObj();
     glPopMatrix();
 
     // Front cockpit trapezoid
@@ -898,81 +878,7 @@ void drawStand(double x, double y, double z, double width, double height, double
     }
 }
 
-// not used now
-// Draw trees
-void drawTree(double x, double y, double z, double scale, unsigned int texture[])
-{
-    // Enable texture
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[4]);
-    SetMaterial(0.08, 0.04, 0.02, // Brown ambient
-                0.4, 0.2, 0.1,    // Brown diffuse
-                0.05, 0.05, 0.05, // Very low specular
-                2);               // Very low shininess
-    glColor3f(0.4, 0.2, 0.1);     // Brown
-
-    // Draw a textured bark cylinder
-    cylinder(x, y + 0.3 * scale, z, 0.1 * scale, 0.6 * scale, 8, 0, 0, 0, 1, 1, 1);
-
-    glDisable(GL_TEXTURE_2D);
-
-    // Enable texture
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture[5]);
-    // Leaves
-    SetMaterial(0.1, 0.2, 0.1, // Light green ambient
-                0.4, 0.8, 0.4, // Light green diffuse
-                0.1, 0.2, 0.1, // Specular
-                10);
-
-    glColor3f(0.4, 0.8, 0.4); // Light green color
-
-    glPushMatrix();
-    glTranslated(x, y + 0.7 * scale, z);
-    glScaled(0.4 * scale, 0.4 * scale, 0.4 * scale);
-    cube(0, 0, 0, 1, 1, 1, 0, 1, 1, 1);
-    cube(0, 0.3, 0, 0.8, 0.8, 0.8, 0, 1, 1, 1);
-    cube(0, -0.3, 0, 0.8, 0.8, 0.8, 0, 1, 1, 1);
-    glPopMatrix();
-    glDisable(GL_TEXTURE_2D);
-}
-
-// not used now
-// Function to draw start/finish line
-void drawStartFinishLine()
-{
-    double trackWidth = 1.0;
-    double turnRadius = 2.0;
-    int squares = 8;
-    double squareWidth = trackWidth / squares;
-
-    double line_z = -turnRadius; // Center of the bottom straight
-    double line_y = 0.01;        // Slightly above the track
-
-    for (int i = 0; i < squares; i++)
-    {
-        if (i % 2 == 0)
-        {
-            SetMaterial(0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 0.2, 0.2, 0.2, 10);
-            glColor3f(1.0, 1.0, 1.0); // White
-        }
-        else
-        {
-            SetMaterial(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.05, 0.05, 5);
-            glColor3f(0.0, 0.0, 0.0); // Black
-        }
-
-        glBegin(GL_QUADS);
-        glNormal3f(0, 1, 0);
-        glVertex3f(-trackWidth / 2 + i * squareWidth, line_y, line_z - 0.02);
-        glVertex3f(-trackWidth / 2 + (i + 1) * squareWidth, line_y, line_z - 0.02);
-        glVertex3f(-trackWidth / 2 + (i + 1) * squareWidth, line_y, line_z + 0.02);
-        glVertex3f(-trackWidth / 2 + i * squareWidth, line_y, line_z + 0.02);
-        glEnd();
-    }
-}
-
-// Draw a road block with red and white curbs on edges and barricades
+// Draw a road block with barricades on edges
 void drawRoadBlockWithCurbs(double x, double y, double z, double width, double length, double rotation, unsigned int texture[], int curbs, unsigned int barricadeTextures[], int numBarricadeTextures)
 {
     glPushMatrix();
@@ -999,50 +905,6 @@ void drawRoadBlockWithCurbs(double x, double y, double z, double width, double l
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
-
-    // Curb parameters
-    double curbWidth = 0.2;
-    int numSegments = 8;
-    double segmentLength = length / numSegments;
-    if (curbs)
-    {
-        // Draw alternating red and white curb segments
-        for (int i = 0; i < numSegments; i++)
-        {
-            double segZ = -length / 2 + i * segmentLength;
-
-            // Alternate between red and white
-            if (i % 2 == 0)
-            {
-                SetMaterial(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.3, 0.3, 0.3, 20);
-                glColor3f(1.0, 0.0, 0.0);
-            }
-            else
-            {
-                SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.3, 20);
-                glColor3f(1.0, 1.0, 1.0);
-            }
-
-            // Left curb segment
-            glBegin(GL_QUADS);
-            glNormal3f(0, 1, 0);
-            glVertex3f(-width / 2, 0.01, segZ);
-            glVertex3f(-width / 2 + curbWidth, 0.01, segZ);
-            glVertex3f(-width / 2 + curbWidth, 0.01, segZ + segmentLength);
-            glVertex3f(-width / 2, 0.01, segZ + segmentLength);
-            glEnd();
-
-            // Right curb segment
-            glBegin(GL_QUADS);
-            glNormal3f(0, 1, 0);
-            glVertex3f(width / 2 - curbWidth, 0.01, segZ);
-            glVertex3f(width / 2, 0.01, segZ);
-            glVertex3f(width / 2, 0.01, segZ + segmentLength);
-            glVertex3f(width / 2 - curbWidth, 0.01, segZ + segmentLength);
-            glEnd();
-        }
-    }
-
     glColor3f(1.0, 1.0, 1.0);
     SetMaterial(0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.5, 0.5, 0.5, 50);
 
@@ -1164,7 +1026,7 @@ void drawRoadBlockLeftTurn(double x, double y, double z, double innerRadius, dou
     glRotated(rotation, 0, 1, 0);
 
     double outerRadius = innerRadius + width;
-    int segments = 16; // Number of segments for smooth curve
+    int segments = 16;
     double angleStep = degreeTurn / segments;
 
     // Main road surface
@@ -1502,7 +1364,7 @@ void drawFrameBox()
 // To draw a support banner of given height and width using frame boxes
 void drawSupportBanner(float height, float width, float boxUnit, int type, unsigned int topBannerTexture)
 {
-    if (type == 1)
+    if (type == 1 || type == 5)
     {
         glPushMatrix();
         glTranslatef(0, height, width / 2 + 1);
@@ -1531,7 +1393,7 @@ void drawSupportBanner(float height, float width, float boxUnit, int type, unsig
         glPopMatrix();
     }
 
-    if (type == 2)
+    if (type == 2 || type == 5)
     {
         glPushMatrix();
         glTranslatef(0, height + boxUnit * 1.5, width);
@@ -1571,7 +1433,7 @@ void drawSupportBanner(float height, float width, float boxUnit, int type, unsig
         // Sign/board with texture
         SetMaterial(0.5, 0.5, 0.5, 0.9, 0.9, 0.9, 0.3, 0.3, 0.3, 20);
         glPushMatrix();
-        glTranslatef(-0.01, height, (width + boxUnit) / 2);
+        glTranslatef(-0.05, height, (width + boxUnit) / 2);
 
         glRotated(180, 0, 1, 0);
         rectangleTex(0, 0, 0, width + boxUnit, 3 * boxUnit, 0, 90, 0, topBannerTexture, 1);
@@ -1697,7 +1559,7 @@ void drawCamera()
                 0.2, 0.2, 0.2,
                 0.4, 0.4, 0.4,
                 40.0);
-    cylinder(0, 0, 0, 0.4, 0.6, 20, 0, 0, 0, 0, 0, 0);
+    cylinder(0, 0, 0, 0.4, 0.6, 20, 0, 0, 90, 0, 0, 0);
     glPopMatrix();
 
     // camera handle
@@ -1821,207 +1683,179 @@ void drawLampFixture()
 
     glPopMatrix();
 }
-
 void drawGrandStand()
 {
-    int numDecks = 3;         // Number of levels
-    float deckHeight = 2.0f;  // Vertical spacing between decks
-    float deckDepth = 4.0f;   // Depth of each seating platform
-    float deckWidth = 10.0f;  // Width of grandstand
-    float seatDepth = 0.4f;   // Depth of each bleacher row
-    int numRows = 8;          // Bleacher rows per deck
-    float slantAngle = 25.0f; // Angle of slant
 
-    for (int deck = 0; deck < numDecks; deck++)
+    float standWidth = 14.0f;
+    float standHeight = 7.0f;
+    float sittingHeight = 0.4f;
+    int numRows = 12;
+    float slantAngle = 25.0f;
+
+    // Slant Platform
+    glPushMatrix();
+
+    // Rotate deck upward
+    glRotatef(-slantAngle, 1, 0, 0);
+
+    // Platform material
+    SetMaterial(0.3, 0.25, 0.2, 0.5, 0.4, 0.3, 0.2, 0.2, 0.2, 10.0);
+
+    // Deck Surface
+    glBegin(GL_QUADS);
+    glNormal3f(0, 1, 0);
+    glVertex3f(-standWidth / 2, 0, 0);
+    glVertex3f(standWidth / 2, 0, 0);
+    glVertex3f(standWidth / 2, 0, standHeight);
+    glVertex3f(-standWidth / 2, 0, standHeight);
+    glEnd();
+
+    glPopMatrix();
+    // draw Seats
+    SetMaterial(
+        0.25, 0.15, 0.05,
+        0.45, 0.25, 0.10,
+        0.15, 0.10, 0.05,
+        10.0);
+    glPushMatrix();
+    glTranslatef(0, 0.2, 0);
+    float angle = slantAngle * M_PI / 180.0f;
+    for (int row = 0; row < numRows; row++)
     {
-        float baseY = deck * deckHeight;
-        float baseZ = deck * deckDepth * 0.6f; // Offset each deck back
+        float rowZ = (standHeight / numRows) * row;
+        float seatHeight = 0.3f;
+        // calculate the y and z where the seats must be positioned
+        float y1 = rowZ * sin(angle);
+        float z1 = rowZ * cos(angle);
 
-        glPushMatrix();
-        glTranslatef(0, baseY, baseZ);
+        float y2 = (rowZ + sittingHeight) * sin(angle);
+        float z2 = (rowZ + sittingHeight) * cos(angle);
 
-        // --- SLANTING PLATFORM (Main deck surface) ---
-        glPushMatrix();
-        glRotatef(-slantAngle, 1, 0, 0); // Slant upward
-
-        SetMaterial(0.3, 0.25, 0.2, // Brown ambient
-                    0.5, 0.4, 0.3,  // Brown diffuse
-                    0.2, 0.2, 0.2,  // Low specular
-                    10.0);
-
+        // Seat surface
         glBegin(GL_QUADS);
         glNormal3f(0, 1, 0);
-        glVertex3f(-deckWidth / 2, 0, 0);
-        glVertex3f(deckWidth / 2, 0, 0);
-        glVertex3f(deckWidth / 2, 0, deckDepth);
-        glVertex3f(-deckWidth / 2, 0, deckDepth);
+        glVertex3f(-standWidth / 2, y1, z1);
+        glVertex3f(standWidth / 2, y1, z1);
+        glVertex3f(standWidth / 2, y1, z2);
+        glVertex3f(-standWidth / 2, y1, z2);
         glEnd();
 
-        // --- BLEACHER SEATS (Horizontal rows on the slanted platform) ---
-        SetMaterial(0.1, 0.3, 0.6, // Blue ambient
-                    0.2, 0.5, 0.8, // Blue diffuse
-                    0.3, 0.3, 0.3, // Specular
-                    20.0);
+        // Seat back
+        glBegin(GL_QUADS);
+        glNormal3f(0, 0, -1);
+        glVertex3f(-standWidth / 2, y2, z2);
+        glVertex3f(standWidth / 2, y2, z2);
+        glVertex3f(standWidth / 2, y2 + seatHeight, z2);
+        glVertex3f(-standWidth / 2, y2 + seatHeight, z2);
+        glEnd();
+    }
+    glPopMatrix();
 
-        for (int row = 0; row < numRows; row++)
-        {
-            float rowZ = (deckDepth / numRows) * row;
-            float seatHeight = 0.3f;
+    // Stairs
+    SetMaterial(0.4, 0.4, 0.4, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 30.0);
 
-            // Seat surface
-            glBegin(GL_QUADS);
-            glNormal3f(0, 1, 0);
-            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ);
-            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ);
-            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ + seatDepth);
-            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ + seatDepth);
-            glEnd();
+    int numSteps = 12;
+    float totalRise = standHeight * sin(slantAngle * M_PI / 180.0f);
+    float totalRun = standHeight * cos(slantAngle * M_PI / 180.0f);
+    float stepH = totalRise / numSteps;
+    float stepD = totalRun / numSteps;
 
-            // Seat back (vertical part)
-            glBegin(GL_QUADS);
-            glNormal3f(0, 0, -1);
-            glVertex3f(-deckWidth / 2 + 0.1, 0.02, rowZ + seatDepth);
-            glVertex3f(deckWidth / 2 - 0.1, 0.02, rowZ + seatDepth);
-            glVertex3f(deckWidth / 2 - 0.1, seatHeight, rowZ + seatDepth);
-            glVertex3f(-deckWidth / 2 + 0.1, seatHeight, rowZ + seatDepth);
-            glEnd();
-        }
+    // Left stairs (x = -standWidth/2)
+    float leftX = -standWidth / 2 - 1.0f;
 
-        glPopMatrix(); // End slanted platform
+    for (int s = 0; s < numSteps; s++)
+    {
+        float y = s * stepH;
+        float z = s * stepD;
 
-        // --- STAIRS SETUP ---
-        SetMaterial(0.4, 0.4, 0.4, // Gray ambient
-                    0.6, 0.6, 0.6, // Gray diffuse
-                    0.3, 0.3, 0.3, // Specular
-                    30.0);
+        // Tread
+        glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+        glVertex3f(leftX, y + stepH, z);
+        glVertex3f(leftX + 1.0f, y + stepH, z);
+        glVertex3f(leftX + 1.0f, y + stepH, z + stepD);
+        glVertex3f(leftX, y + stepH, z + stepD);
+        glEnd();
 
-        int numSteps = 12;
-        float totalRise = deckDepth * sin(slantAngle * M_PI / 180.0f);
-        float totalRun = deckDepth * cos(slantAngle * M_PI / 180.0f);
-        float stepHeight = totalRise / numSteps;
-        float stepDepth = totalRun / numSteps;
-
-        // --- LEFT STAIRS ---
-        float leftStairX = -deckWidth / 2;
-        for (int step = 0; step < numSteps; step++)
-        {
-            float stepY = step * stepHeight;
-            float stepZ = step * stepDepth;
-
-            // Step tread (horizontal)
-            glBegin(GL_QUADS);
-            glNormal3f(0, 1, 0);
-            glVertex3f(leftStairX, stepY + stepHeight, stepZ);
-            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ);
-            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ + stepDepth);
-            glVertex3f(leftStairX, stepY + stepHeight, stepZ + stepDepth);
-            glEnd();
-
-            // Step riser (vertical)
-            glBegin(GL_QUADS);
-            glNormal3f(0, 0, -1);
-            glVertex3f(leftStairX, stepY, stepZ);
-            glVertex3f(leftStairX - 1.0f, stepY, stepZ);
-            glVertex3f(leftStairX - 1.0f, stepY + stepHeight, stepZ);
-            glVertex3f(leftStairX, stepY + stepHeight, stepZ);
-            glEnd();
-        }
-
-        // --- RIGHT STAIRS ---
-        float rightStairX = deckWidth / 2;
-        for (int step = 0; step < numSteps; step++)
-        {
-            float stepY = step * stepHeight;
-            float stepZ = step * stepDepth;
-
-            // Step tread (horizontal)
-            glBegin(GL_QUADS);
-            glNormal3f(0, 1, 0);
-            glVertex3f(rightStairX, stepY + stepHeight, stepZ);
-            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ);
-            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ + stepDepth);
-            glVertex3f(rightStairX, stepY + stepHeight, stepZ + stepDepth);
-            glEnd();
-
-            // Step riser (vertical)
-            glBegin(GL_QUADS);
-            glNormal3f(0, 0, -1);
-            glVertex3f(rightStairX, stepY, stepZ);
-            glVertex3f(rightStairX + 1.0f, stepY, stepZ);
-            glVertex3f(rightStairX + 1.0f, stepY + stepHeight, stepZ);
-            glVertex3f(rightStairX, stepY + stepHeight, stepZ);
-            glEnd();
-        }
-
-        glPopMatrix(); // End deck transformation
-
-        // --- TWO VERTICAL SUPPORT PILLARS PER DECK (Left and Right) ---
-        SetMaterial(0.3, 0.3, 0.3, // Dark gray
-                    0.5, 0.5, 0.5, // Gray
-                    0.6, 0.6, 0.6, // Shiny
-                    50.0);
-
-        // Calculate the height to middle of slanted deck + 0.5
-        float slantMidHeight = baseY + (deckDepth / 2) * sin(slantAngle * M_PI / 180.0f) + 0.5f;
-        float slantMidZ = baseZ + (deckDepth / 2) * cos(slantAngle * M_PI / 180.0f);
-        glPushMatrix();
-        glTranslatef(0, slantMidHeight / 2, 0);
-        // Left support pillar
-        cylinder(-deckWidth / 2 - 1.2f, 0, slantMidZ,
-                 0.25f,          // thick radius
-                 slantMidHeight, // height from ground to mid-deck
-                 16,             // slices
-                 0, 0, 0,        // rotation
-                 0, 0, 0);       // no texture
-
-        // Right support pillar
-        cylinder(deckWidth / 2 + 1.2f, 0, slantMidZ,
-                 0.25f,          // thick radius
-                 slantMidHeight, // height from ground to mid-deck
-                 16,             // slices
-                 0, 0, 0,        // rotation
-                 0, 0, 0);       // no texture
-        glPopMatrix();
+        // Riser
+        glBegin(GL_QUADS);
+        glNormal3f(0, 0, -1);
+        glVertex3f(leftX, y, z);
+        glVertex3f(leftX + 1.0f, y, z);
+        glVertex3f(leftX + 1.0f, y + stepH, z);
+        glVertex3f(leftX, y + stepH, z);
+        glEnd();
     }
 
-    // --- RAILING ON TOP DECK (FIXED AND PROPER) ---
-    SetMaterial(0.6, 0.6, 0.6,
-                0.8, 0.8, 0.8,
-                0.9, 0.9, 0.9,
-                80.0);
+    // support pillars
+    SetMaterial(0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 50.0);
 
-    // Calculate position at the BACK (highest point) of top deck
-    int topDeck = numDecks - 1;
-    float topDeckBaseY = topDeck * deckHeight;
-    float topDeckBaseZ = topDeck * deckDepth * 0.6f;
+    float midY = (standHeight / 2) * sin(slantAngle * M_PI / 180.0f);
+    float midZ = (standHeight / 2) * cos(slantAngle * M_PI / 180.0f);
+    float endY = (standHeight)*sin(slantAngle * M_PI / 180.0f);
+    float endZ = (standHeight)*cos(slantAngle * M_PI / 180.0f);
 
-    // Back edge of the slanted platform (highest point)
-    float railingY = topDeckBaseY + deckDepth * sin(slantAngle * M_PI / 180.0f);
-    float railingZ = topDeckBaseZ + deckDepth * cos(slantAngle * M_PI / 180.0f);
+    // Left pillar
+    cylinder(-standWidth / 2 - 1.2f, 0, midZ - 1.5f,
+             0.25f, midY + 1, 16,
+             0, 0, 0, 0, 0, 0);
 
+    // Right pillar
+    cylinder(standWidth / 2 + 0.2f, 0, midZ - 1.5f,
+             0.25f, midY + 1, 16,
+             0, 0, 0, 0, 0, 0);
+
+    // Left longer pillar
+    cylinder(-standWidth / 2 - 1.2f, 0, midZ + 1.5f,
+             0.25f, midY * 2 + 3.0f, 16,
+             0, 0, 0, 0, 0, 0);
+
+    // Right longer pillar
+    cylinder(standWidth / 2 + 0.2f, 0, midZ + 1.5f,
+             0.25f, midY * 2 + 3.0f, 16,
+             0, 0, 0, 0, 0, 0);
+
+    // draw closing triangles
+    glBegin(GL_TRIANGLES);
+    glVertex3f(-standWidth / 2 - 1.2f, 0, 0);
+    glVertex3f(-standWidth / 2 - 1.2f, endY, endZ);
+    glVertex3f(-standWidth / 2 - 1.2f, 0, endZ);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glVertex3f(standWidth / 2 + 0.1f, 0, 0);
+    glVertex3f(standWidth / 2 + 0.1f, endY, endZ);
+    glVertex3f(standWidth / 2 + 0.1f, 0, endZ);
+    glEnd();
+
+    // draw platform
+    glPushMatrix();
+    glTranslatef(-0.4f, 0, 0.5);
+    cube(0, 0, endZ, (standWidth + 1.2f) / 2, endY, 0.6, 0, 0, 0, 0);
+    glPopMatrix();
+
+    // railing on the platform
+    SetMaterial(0.6, 0.6, 0.6, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 80.0);
     // Railing posts across the width
     int numPosts = 11;
     for (int p = 0; p < numPosts; p++)
     {
-        float postX = -deckWidth / 2 + (deckWidth / (numPosts - 1)) * p;
-        cylinder(postX, railingY, railingZ,
-                 0.05f, // thin post
-                 1.0f,  // height
-                 8,     // slices
+        float postX = -standWidth / 2 + (standWidth / (numPosts - 1)) * p;
+        cylinder(postX, endY, endZ + 1.0f, 0.05f,
+                 1.0f,
+                 8,
                  0, 0, 0, 0, 0, 0);
     }
-
-    // Middle horizontal railing bar
+    // Top bar
     glPushMatrix();
-    glTranslatef(0, railingY + 0.5f, railingZ);
+    glTranslatef(0, endY + 0.5f, endZ + 1.0f);
     glRotatef(90, 0, 1, 0);
-    cylinder(0, 0, 0, 0.03f, deckWidth, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(0, 0, 0, 0.03f, standWidth, 8, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
-
-    // Bottom horizontal railing bar
+    // Bottom bar
     glPushMatrix();
-    glTranslatef(0, railingY + 0.1f, railingZ);
+    glTranslatef(0, endY + 0.1f, endZ + 1.0f);
     glRotatef(90, 0, 1, 0);
-    cylinder(0, 0, 0, 0.03f, deckWidth, 8, 90, 0, 0, 0, 0, 0);
+    cylinder(0, 0, 0, 0.03f, standWidth, 8, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
 }

@@ -31,7 +31,7 @@ double asp = 1;      //  Aspect ratio
 double dim = 8;      //  Size of world
 
 const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
-const char *textPers[] = {"Perspective", "POV"};
+const char *textPers[] = {"Perspective", "Start line", "POV"};
 
 // for Shaders rain and splash
 typedef struct
@@ -446,7 +446,24 @@ void display(SDL_Window *window)
       fogIntensity = 0.04f;
       break;
    }
-   case 1: // POV view
+
+   case 1: // Start line view
+   {
+      // CAMERA
+      gluLookAt(12, 4, 3, // camera position
+                0, 0, 0,
+                0, 1, 0);
+
+      // Draw skybox at camera position
+      glPushMatrix();
+      glTranslatef(povX, povY, povZ);
+      DrawSkybox(70.0f, currentSky);
+      glPopMatrix();
+
+      fogIntensity = 0.12f;
+      break;
+   }
+   case 2: // POV view
    {
       gluLookAt(povX, povY, povZ, mclarenX, mclarenY + 0.2, mclarenZ, 0, 1, 0);
 
@@ -501,16 +518,48 @@ void display(SDL_Window *window)
    case -1:
 
       glPushMatrix();
-      drawGrandStand();
+      drawSupportBanner(3.0, 6.0, 0.3, 5, barricadeTexture[2]);
       glPopMatrix();
       break;
 
    case 0:
+      glPushMatrix();
+      glTranslated(5, 0, -3.5);
+      glRotatef(180, 0, 1, 0);
+      glScalef(1.0f, 1.0f, 1.3f);
+      drawGrandStand();
+      glPopMatrix();
 
-      // Support banner
+      // support banner with textures
+      glPushMatrix();
+      glTranslated(33, 0, 20);
+      glRotatef(-90, 0, 1, 0);
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[0]);
+      glPopMatrix();
+
+      // support banner with lights
+      glPushMatrix();
+      glTranslated(33, 0, 10);
+      glRotatef(-90, 0, 1, 0);
+      drawSupportBanner(3.0, 6.0, 0.3, 3, barricadeTexture[2]);
+      glPopMatrix();
+
+      // support banner with textures
+      glPushMatrix();
+      glTranslated(20, 0, -3);
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[2]);
+      glPopMatrix();
+
+      // main start light
       glPushMatrix();
       glTranslated(12, 0, -3);
-      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[4]);
+      drawSupportBanner(3.0, 6.0, 0.3, 5, barricadeTexture[2]);
+      glPopMatrix();
+
+      // support banner
+      glPushMatrix();
+      glTranslated(-10, 0, -3);
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[1]);
       glPopMatrix();
 
       // Circuit with barricades
@@ -651,7 +700,7 @@ void update()
    const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
    // Handle car driving in POV mode for each frame
-   if (perspective == 1 && mode == 0)
+   if (perspective == 2 && mode == 0)
    {
       int isAccelerating = 0;
       int isTurning = 0;
@@ -790,7 +839,7 @@ int key()
    }
    //  Switch projection mode
    else if (keys[SDL_SCANCODE_P])
-      perspective = (perspective + 1) % 2;
+      perspective = (perspective + 1) % 3;
    //  Toggle lighting
    else if (keys[SDL_SCANCODE_L])
       light = !light;
