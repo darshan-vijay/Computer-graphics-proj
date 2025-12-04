@@ -523,10 +523,25 @@ void display(SDL_Window *window)
       break;
 
    case 0:
+      // first stand near start line
       glPushMatrix();
       glTranslated(5, 0, -3.5);
       glRotatef(180, 0, 1, 0);
-      glScalef(1.0f, 1.0f, 1.3f);
+      glScalef(1.0f, 1.0f, 1.0f);
+      drawGrandStand();
+      glPopMatrix();
+      // second Stand
+      glPushMatrix();
+      glTranslated(22, 0, -3.5);
+      glRotatef(180, 0, 1, 0);
+      glScalef(1.0f, 1.0f, 1.0f);
+      drawGrandStand();
+      glPopMatrix();
+      // 3rd Stand
+      glPushMatrix();
+      glTranslated(35, 0, 10);
+      glRotatef(90, 0, 1, 0);
+      glScalef(1.0f, 1.0f, 1.0f);
       drawGrandStand();
       glPopMatrix();
 

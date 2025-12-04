@@ -745,7 +745,6 @@ void drawTireBarrierRow(double startX, double y, double z, int count, double spa
     }
 }
 
-// not used now
 // Function to draw a building with windows
 void drawStand(double x, double y, double z, double width, double height, double depth, unsigned int texture[])
 {
@@ -1686,8 +1685,8 @@ void drawLampFixture()
 void drawGrandStand()
 {
 
-    float standWidth = 14.0f;
-    float standHeight = 7.0f;
+    float standWidth = 12.0f;
+    float standHeight = 5.0f;
     float sittingHeight = 0.4f;
     int numRows = 12;
     float slantAngle = 25.0f;

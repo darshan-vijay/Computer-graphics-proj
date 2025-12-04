@@ -115,8 +115,6 @@ void Fatal(const char *format, ...);
 
     void drawF1Garage(double x, double y, double z, double scale, unsigned int texture[], float colors[][3]);
 
-    void drawTree(double x, double y, double z, double scale, unsigned int texture[]);
-
     void drawStand(double x, double y, double z, double width, double height, double depth, unsigned int texture[]);
 
     void ball(double x, double y, double z, double r);
