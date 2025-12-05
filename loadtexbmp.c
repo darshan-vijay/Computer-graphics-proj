@@ -114,21 +114,22 @@ unsigned int LoadTexBMP(const char *file)
    return texture;
 }
 
-//
-//  Load texture from BMP file and add an alpha channel
-//
-unsigned int TransparentLoadTexBMP(const char *file)
+// AI generated Code
+// Load texture from BMP file and add an alpha channel
+unsigned int LoadTexBMPTransparent(const char *file, int blackThreshold)
 {
    //  Open file
    FILE *f = fopen(file, "rb");
    if (!f)
       Fatal("Cannot open file %s\n", file);
+
    //  Check image magic
    unsigned short magic;
    if (fread(&magic, 2, 1, f) != 1)
       Fatal("Cannot read magic from %s\n", file);
    if (magic != 0x4D42 && magic != 0x424D)
       Fatal("Image magic not BMP in %s\n", file);
+
    //  Read header
    unsigned int dx, dy, off, k; // Image dimensions, offset and compression
    unsigned short nbp, bpp;     // Planes and bits per pixel
@@ -136,6 +137,7 @@ unsigned int TransparentLoadTexBMP(const char *file)
        fseek(f, 4, SEEK_CUR) || fread(&dx, 4, 1, f) != 1 || fread(&dy, 4, 1, f) != 1 ||
        fread(&nbp, 2, 1, f) != 1 || fread(&bpp, 2, 1, f) != 1 || fread(&k, 4, 1, f) != 1)
       Fatal("Cannot read header from %s\n", file);
+
    //  Reverse bytes on big endian hardware (detected by backwards magic)
    if (magic == 0x424D)
    {
@@ -146,6 +148,7 @@ unsigned int TransparentLoadTexBMP(const char *file)
       Reverse(&bpp, 2);
       Reverse(&k, 4);
    }
+
    //  Check image parameters
    unsigned int max;
    glGetIntegerv(GL_MAX_TEXTURE_SIZE, (int *)&max);
@@ -171,58 +174,82 @@ unsigned int TransparentLoadTexBMP(const char *file)
       Fatal("%s image height not a power of two: %d\n", file, dy);
 #endif
 
-   //  Allocate image memory
-   unsigned int size = 3 * dx * dy;
-   unsigned char *image = (unsigned char *)malloc(size);
-   if (!image)
-      Fatal("Cannot allocate %d bytes of memory for image %s\n", size, file);
+   //  Allocate image memory for RGB
+   unsigned int sizeRGB = 3 * dx * dy;
+   unsigned char *imageRGB = (unsigned char *)malloc(sizeRGB);
+   if (!imageRGB)
+      Fatal("Cannot allocate %d bytes of memory for image %s\n", sizeRGB, file);
+
    //  Seek to and read image
-   if (fseek(f, off, SEEK_SET) || fread(image, size, 1, f) != 1)
+   if (fseek(f, off, SEEK_SET) || fread(imageRGB, sizeRGB, 1, f) != 1)
       Fatal("Error reading data from image %s\n", file);
    fclose(f);
+
    //  Reverse colors (BGR -> RGB)
-   for (k = 0; k < size; k += 3)
+   for (k = 0; k < sizeRGB; k += 3)
    {
-      unsigned char temp = image[k];
-      image[k] = image[k + 2];
-      image[k + 2] = temp;
+      unsigned char temp = imageRGB[k];
+      imageRGB[k] = imageRGB[k + 2];
+      imageRGB[k + 2] = temp;
    }
 
-   //  Create Alpha
-   unsigned int sizeA = 4 * dx * dy;
-   unsigned char *imageA = (unsigned char *)malloc(sizeA);
-   if (!imageA)
-      Fatal("Cannot allocate %d bytes of memory for image %s\n", sizeA, file);
-   //  Reverse colors (BGR -> RGB)
+   //  Allocate RGBA image (with alpha channel)
+   unsigned int sizeRGBA = 4 * dx * dy;
+   unsigned char *imageRGBA = (unsigned char *)malloc(sizeRGBA);
+   if (!imageRGBA)
+      Fatal("Cannot allocate %d bytes for RGBA image %s\n", sizeRGBA, file);
+
+   //  Convert RGB to RGBA and make black pixels transparent
    for (unsigned int i = 0; i < dx * dy; i++)
    {
-      imageA[i * 4 + 0] = image[i * 3 + 0]; // R
-      imageA[i * 4 + 1] = image[i * 3 + 1]; // G
-      imageA[i * 4 + 2] = image[i * 3 + 2]; // B
-      if (imageA[i * 4 + 0] < 30 && imageA[i * 4 + 1] < 30 && imageA[i * 4 + 2] < 30)
+      unsigned char r = imageRGB[i * 3 + 0];
+      unsigned char g = imageRGB[i * 3 + 1];
+      unsigned char b = imageRGB[i * 3 + 2];
+
+      // Copy RGB values
+      imageRGBA[i * 4 + 0] = r;
+      imageRGBA[i * 4 + 1] = g;
+      imageRGBA[i * 4 + 2] = b;
+
+      // Set alpha based on darkness
+      // If all RGB components are below threshold, make transparent
+      if (r <= blackThreshold && g <= blackThreshold && b <= blackThreshold)
       {
-         imageA[i * 4 + 3] = 0;
+         imageRGBA[i * 4 + 3] = 0; // Fully transparent
       }
       else
-         imageA[i * 4 + 3] = 255;
+      {
+         imageRGBA[i * 4 + 3] = 255; // Fully opaque
+      }
    }
 
+   //  Free RGB image (no longer needed)
+   free(imageRGB);
+
    //  Sanity check
-   ErrCheck("LoadTexBMP");
+   ErrCheck("LoadTexBMPTransparent");
+
    //  Generate 2D texture
    unsigned int texture;
    glGenTextures(1, &texture);
    glBindTexture(GL_TEXTURE_2D, texture);
-   //  Copy image
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dx, dy, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+
+   //  Copy RGBA image with alpha channel
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dx, dy, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageRGBA);
    if (glGetError())
       Fatal("Error in glTexImage2D %s %dx%d\n", file, dx, dy);
+
    //  Scale linearly when image size doesn't match
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-   //  Free image memory
-   free(image);
+   //  Important: Use GL_CLAMP to avoid edge artifacts with transparency
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+   //  Free RGBA image memory
+   free(imageRGBA);
+
    //  Return texture name
    return texture;
 }

@@ -56,7 +56,7 @@ void Fatal(const char *format, ...);
 #endif
     unsigned int LoadTexBMP(const char *file);
 
-    unsigned int TransparentLoadTexBMP(const char *file);
+    unsigned int LoadTexBMPTransparent(const char *file, int blackThreshold);
 
     void Project(int perspective, double fov, double asp, double dim);
 

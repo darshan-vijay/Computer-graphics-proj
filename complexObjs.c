@@ -224,9 +224,38 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     // Rear cube section
     glPushMatrix();
     glTranslated(-2.25, 0, 0);
-    noTexCube(0, 0, 0,
-              0.75, 0.35, 1,
-              0);
+    glDisable(GL_TEXTURE_2D);
+    SetMaterial(colors[0][0], colors[0][1], colors[0][2],
+                colors[0][0] * 1.3, colors[0][1] * 1.3, colors[0][2] * 1.3,
+                1.0, 1.0, 1.0, 100);
+    // pass 1 for normal shape
+    cube(0, 0, 0,
+         0.75, 0.35, 1,
+         0,
+         0, // useTexture = 0 (important!)
+         1,
+         1);
+    // pass 2 for transparent texture
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, texture[12]);
+
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(-1.0, -1.0);
+
+    cube(0, 0, 0,
+         0.75, 0.35, 1,
+         0,
+         1, // useTexture = 1
+         1,
+         1);
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glPopMatrix();
 
     // Rear connection trapezoid

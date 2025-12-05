@@ -45,46 +45,31 @@ void cube(double x, double y, double z,
 
    // Right
    glNormal3f(+1, 0, 0);
-   glTexCoord2f(0, 0);
    glVertex3f(+1, -1, +1);
-   glTexCoord2f(texRepeatU, 0);
    glVertex3f(+1, -1, -1);
-   glTexCoord2f(texRepeatU, texRepeatV);
    glVertex3f(+1, +1, -1);
-   glTexCoord2f(0, texRepeatV);
    glVertex3f(+1, +1, +1);
 
    // Left
    glNormal3f(-1, 0, 0);
-   glTexCoord2f(0, 0);
    glVertex3f(-1, -1, -1);
-   glTexCoord2f(texRepeatU, 0);
    glVertex3f(-1, -1, +1);
-   glTexCoord2f(texRepeatU, texRepeatV);
    glVertex3f(-1, +1, +1);
-   glTexCoord2f(0, texRepeatV);
    glVertex3f(-1, +1, -1);
 
    // Top
    glNormal3f(0, +1, 0);
    glTexCoord2f(0, 0);
    glVertex3f(-1, +1, +1);
-   glTexCoord2f(texRepeatU, 0);
    glVertex3f(+1, +1, +1);
-   glTexCoord2f(texRepeatU, texRepeatV);
    glVertex3f(+1, +1, -1);
-   glTexCoord2f(0, texRepeatV);
    glVertex3f(-1, +1, -1);
 
    // Bottom
    glNormal3f(0, -1, 0);
-   glTexCoord2f(0, 0);
    glVertex3f(-1, -1, -1);
-   glTexCoord2f(texRepeatU, 0);
    glVertex3f(+1, -1, -1);
-   glTexCoord2f(texRepeatU, texRepeatV);
    glVertex3f(+1, -1, +1);
-   glTexCoord2f(0, texRepeatV);
    glVertex3f(-1, -1, +1);
 
    glEnd();
@@ -311,9 +296,13 @@ void trapezoid(double x, double y, double z,
       double len = sqrt(nx * nx + ny * ny + nz * nz);
       glNormal3f(nx / len, ny / len, nz / len);
    }
+   glTexCoord2f(0, 1);
    glVertex3f(bx, 0, bz);
+   glTexCoord2f(0, 0);
    glVertex3f(bx, 0, -bz);
+   glTexCoord2f(1, 0);
    glVertex3f(tx, h, -tz);
+   glTexCoord2f(1, 1);
    glVertex3f(tx, h, tz);
 
    // Left (-X)
@@ -324,9 +313,13 @@ void trapezoid(double x, double y, double z,
       double len = sqrt(nx * nx + ny * ny + nz * nz);
       glNormal3f(nx / len, ny / len, nz / len);
    }
+   glTexCoord2f(0, 0);
    glVertex3f(-bx, 0, -bz);
+   glTexCoord2f(0, 1);
    glVertex3f(-bx, 0, bz);
+   glTexCoord2f(1, 1);
    glVertex3f(-tx, h, tz);
+   glTexCoord2f(1, 0);
    glVertex3f(-tx, h, -tz);
 
    // Top face
