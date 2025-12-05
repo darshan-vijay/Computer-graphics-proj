@@ -323,6 +323,11 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
         carRotateAngle = (carRotateAngle - 10) % 360;
     }
 
+    if (isBraking && fabs(velocity) > 0.01f)
+    {
+        carRotateAngle = (carRotateAngle + 3) % 360;
+    }
+
     SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.1, 0.1, 5);
 
     // Front wheels with steering rotation

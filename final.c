@@ -148,14 +148,14 @@ int diffuse = 80;                 // Diffuse intensity (%)
 int specular = 80;                // Specular intensity (%)
 int zh = 90;                      // Light azimuth
 float ylight = 4;                 // Elevation of light
-unsigned int texture[12];         // Texture names
+unsigned int texture[13];         // Texture names
 unsigned int barricadeTexture[5]; // Barricade Texture names
 
 Mix_Music *rainBG;
 // Mix_Chunk *engineStart;
 Mix_Chunk *engineAcc;
 int firstAcc = 0;
-int engineChannel;
+// int engineChannel;
 int engineAccChannel;
 
 void reshape(SDL_Window *window)
@@ -976,18 +976,19 @@ int main(int argc, char *argv[])
    //  Set screen size
    reshape(window);
 
-   texture[0] = LoadTexBMP("asphalt.bmp");     // Track texture
-   texture[1] = LoadTexBMP("concrete.bmp");    // Building texture
-   texture[2] = LoadTexBMP("grass.bmp");       // grass texture
-   texture[3] = LoadTexBMP("curb.bmp");        // curb texture
-   texture[4] = LoadTexBMP("bark.bmp");        // bark texture
-   texture[5] = LoadTexBMP("bush.bmp");        // bush texture
-   texture[6] = LoadTexBMP("yellowside.bmp");  // yellow side texture
-   texture[7] = LoadTexBMP("violetside.bmp");  // violet side texture
-   texture[8] = LoadTexBMP("fireside.bmp");    // fire side texture
-   texture[9] = LoadTexBMP("carbonFiber.bmp"); // carbon Fibre Texture
-   texture[10] = LoadTexBMP("tireTex.bmp");    // Tire Texture
-   texture[11] = LoadTexBMP("tireRim.bmp");    // Tire Side Texture
+   texture[0] = LoadTexBMP("asphalt.bmp");                  // Track texture
+   texture[1] = LoadTexBMP("concrete.bmp");                 // Building texture
+   texture[2] = LoadTexBMP("grass.bmp");                    // grass texture
+   texture[3] = LoadTexBMP("curb.bmp");                     // curb texture
+   texture[4] = LoadTexBMP("bark.bmp");                     // bark texture
+   texture[5] = LoadTexBMP("bush.bmp");                     // bush texture
+   texture[6] = LoadTexBMP("yellowside.bmp");               // yellow side texture
+   texture[7] = LoadTexBMP("violetside.bmp");               // violet side texture
+   texture[8] = LoadTexBMP("fireside.bmp");                 // fire side texture
+   texture[9] = LoadTexBMP("carbonFiber.bmp");              // carbon Fibre Texture
+   texture[10] = LoadTexBMP("tireTex.bmp");                 // Tire Texture
+   texture[11] = LoadTexBMP("tireRim.bmp");                 // Tire Side Texture
+   texture[12] = TransparentLoadTexBMP("redbullBlack.bmp"); // logo Texture
 
    barricadeTexture[0] = LoadTexBMP("pirelli.bmp"); // pirelli texture
    barricadeTexture[1] = LoadTexBMP("redbull.bmp"); // redbull texture
