@@ -432,6 +432,97 @@ void cylinder(double x, double y, double z,
    glPopMatrix();
 }
 
+void cylinderTex(double x, double y, double z,
+                 double radius, double height,
+                 int slices,
+                 double thX, double thY, double thZ,
+                 int useTexture, unsigned int texture[], int tex1, int tex2)
+{
+   glPushMatrix();
+
+   // Position
+   glTranslated(x, y, z);
+
+   // Rotations around X, Y, Z
+   glRotated(thX, 1, 0, 0);
+   glRotated(thY, 0, 1, 0);
+   glRotated(thZ, 0, 0, 1);
+   if (useTexture)
+   {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, texture[tex1]);
+   }
+   // Cylinder Side
+   glBegin(GL_QUAD_STRIP);
+   for (int i = 0; i <= slices; i++)
+   {
+      double theta = 2.0 * M_PI * i / slices;
+      double dx = radius * cos(theta);
+      double dz = radius * sin(theta);
+      double u = (double)i / slices;
+
+      glNormal3d(cos(theta), 0, sin(theta));
+      glTexCoord2f(0, u);
+      glVertex3f(dx, -height / 2, dz); // bottom
+
+      glTexCoord2f(1, u);
+      glVertex3f(dx, height / 2, dz); // top
+   }
+   glEnd();
+
+   if (useTexture)
+   {
+      glBindTexture(GL_TEXTURE_2D, texture[tex2]);
+   }
+   // Top cap
+   glBegin(GL_TRIANGLE_FAN);
+   glNormal3d(0, 1, 0);
+   if (useTexture)
+      glTexCoord2f(0.5, 0.5);    // Center of texture
+   glVertex3f(0, height / 2, 0); // center
+   for (int i = 0; i <= slices; i++)
+   {
+      double theta = 2.0 * M_PI * i / slices;
+      double dx = radius * cos(theta);
+      double dz = radius * sin(theta);
+
+      if (useTexture)
+      {
+         // Map circle to texture space (0.5, 0.5) = center
+         double u = 0.5 + 0.5 * cos(theta);
+         double v = 0.5 + 0.5 * sin(theta);
+         glTexCoord2f(u, v);
+      }
+      glVertex3f(dx, height / 2, dz);
+   }
+   glEnd();
+
+   // Bottom cap
+   glBegin(GL_TRIANGLE_FAN);
+   glNormal3d(0, -1, 0);
+   if (useTexture)
+      glTexCoord2f(0.5, 0.5);     // Center
+   glVertex3f(0, -height / 2, 0); // center
+   for (int i = 0; i <= slices; i++)
+   {
+      double theta = 2.0 * M_PI * i / slices;
+      double dx = radius * cos(theta);
+      double dz = radius * sin(theta);
+
+      if (useTexture)
+      {
+         double u = 0.5 + 0.5 * cos(theta);
+         double v = 0.5 + 0.5 * sin(theta);
+         glTexCoord2f(u, v);
+      }
+      glVertex3f(dx, -height / 2, dz);
+   }
+   glEnd();
+   glDisable(GL_TEXTURE_2D);
+
+   glPopMatrix();
+}
+
 // Draw a triangular prism
 void prism(double base, double height, double depth)
 {

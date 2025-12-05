@@ -98,6 +98,12 @@ void Fatal(const char *format, ...);
                   int useTexture,
                   double texRepeatU, double texRepeatV);
 
+    void cylinderTex(double x, double y, double z,
+                     double radius, double height,
+                     int slices,
+                     double thX, double thY, double thZ,
+                     int useTexture, unsigned int texture[], int tex1, int tex2);
+
     void rectangle(double x, double y, double z,     // center position
                    double w, double h,               // width and height
                    double rx, double ry, double rz); // rotations (deg) about x,y,z
@@ -109,7 +115,7 @@ void Fatal(const char *format, ...);
     void drawBarricade(double x, double y, double z, double rotation, unsigned int texture);
 
     // Complex Objs
-    void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking);
+    void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking, float velocity);
 
     void drawTireBarrierRow(double startX, double y, double z, int count, double spacing);
 

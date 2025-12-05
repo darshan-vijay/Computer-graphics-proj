@@ -148,7 +148,7 @@ int diffuse = 80;                 // Diffuse intensity (%)
 int specular = 80;                // Specular intensity (%)
 int zh = 90;                      // Light azimuth
 float ylight = 4;                 // Elevation of light
-unsigned int texture[11];         // Texture names
+unsigned int texture[12];         // Texture names
 unsigned int barricadeTexture[5]; // Barricade Texture names
 
 Mix_Music *rainBG;
@@ -611,7 +611,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(6, 0, -1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0, 0);
       glPopMatrix();
 
       // start marking 2
@@ -625,7 +625,7 @@ void display(SDL_Window *window)
       glTranslated(mclarenX, mclarenY, mclarenZ);
       glRotated(headingAngle, 0, 1, 0); // heading direction
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking);
+      drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking, carVelocity);
       glPopMatrix();
 
       // start marking 3
@@ -637,7 +637,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(2, 0, -1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mercedesColors, 0, 0);
+      drawF1Car(1, 1, 1, texture, mercedesColors, 0, 0, 0);
       glPopMatrix();
 
       // start marking 4
@@ -649,7 +649,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(0, 0, 1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, redBullColors, 0, 0);
+      drawF1Car(1, 1, 1, texture, redBullColors, 0, 0, 0);
       glPopMatrix();
 
       // start marking 5
@@ -661,7 +661,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(-2, 0, -1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, astonMartinColors, 0, 0);
+      drawF1Car(1, 1, 1, texture, astonMartinColors, 0, 0, 0);
       glPopMatrix();
 
       break;
@@ -670,7 +670,7 @@ void display(SDL_Window *window)
       break;
 
    case 2:
-      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0, 0);
       break;
    }
 
@@ -976,15 +976,18 @@ int main(int argc, char *argv[])
    //  Set screen size
    reshape(window);
 
-   texture[0] = LoadTexBMP("asphalt.bmp");    // Track texture
-   texture[1] = LoadTexBMP("concrete.bmp");   // Building texture
-   texture[2] = LoadTexBMP("grass.bmp");      // grass texture
-   texture[3] = LoadTexBMP("curb.bmp");       // curb texture
-   texture[4] = LoadTexBMP("bark.bmp");       // bark texture
-   texture[5] = LoadTexBMP("bush.bmp");       // bush texture
-   texture[6] = LoadTexBMP("yellowside.bmp"); // yellow side texture
-   texture[7] = LoadTexBMP("violetside.bmp"); // violet side texture
-   texture[8] = LoadTexBMP("fireside.bmp");   // fire side texture
+   texture[0] = LoadTexBMP("asphalt.bmp");     // Track texture
+   texture[1] = LoadTexBMP("concrete.bmp");    // Building texture
+   texture[2] = LoadTexBMP("grass.bmp");       // grass texture
+   texture[3] = LoadTexBMP("curb.bmp");        // curb texture
+   texture[4] = LoadTexBMP("bark.bmp");        // bark texture
+   texture[5] = LoadTexBMP("bush.bmp");        // bush texture
+   texture[6] = LoadTexBMP("yellowside.bmp");  // yellow side texture
+   texture[7] = LoadTexBMP("violetside.bmp");  // violet side texture
+   texture[8] = LoadTexBMP("fireside.bmp");    // fire side texture
+   texture[9] = LoadTexBMP("carbonFiber.bmp"); // carbon Fibre Texture
+   texture[10] = LoadTexBMP("tireTex.bmp");    // Tire Texture
+   texture[11] = LoadTexBMP("tireRim.bmp");    // Tire Side Texture
 
    barricadeTexture[0] = LoadTexBMP("pirelli.bmp"); // pirelli texture
    barricadeTexture[1] = LoadTexBMP("redbull.bmp"); // redbull texture

@@ -2,6 +2,8 @@
 
 #define NUM_ROTATIONS 50
 
+int carRotateAngle = 0;
+
 // points to trace the bezier curve
 double P[3][3] = {
     {0.255, 0.0, 0.0},
@@ -152,7 +154,7 @@ void GetRotationObj()
     glEnd();
 }
 
-void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking)
+void drawF1Car(float length, float width, float breadth, unsigned int texture[], float colors[][3], float steeringAngle, int isBraking, float velocity)
 {
     // colors[0] body color
     // colors[1] fin/wing color (rear and front wings)
@@ -247,17 +249,17 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     glPopMatrix();
 
     // Rear wing and fin
-    SetMaterial(colors[1][0], colors[1][1], colors[1][2],
+    SetMaterial(1.0, 1.0, 1.0,
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
 
-    rectangle(-4.4, 1.06, 0, 0.45, 1.6, -90, 0, 0); // back fin
-    rectangle(-4.4, 1.11, 0.8, 0.45, 0.1, 0, 0, 0);
-    rectangle(-4.4, 1.11, -0.8, 0.45, 0.1, 0, 0, 0);
-    rectangle(-4.4, 0.16, -0.39, 0.45, 1, 0, 0, 0);
-    rectangle(-4.4, 0.16, 0.39, 0.45, 1, 0, 0, 0);
-    rectangle(-4.4, 0.85, -0.6, 0.45, 0.62, -45, 0, 0);
-    rectangle(-4.4, 0.85, 0.6, 0.45, 0.62, 45, 0, 0);
+    rectangleTex(-4.4, 1.06, 0, 0.45, 1.6, -90, 0, 0, texture[9], 1); // back fin
+    rectangleTex(-4.4, 1.11, 0.8, 0.45, 0.1, 0, 0, 0, texture[9], 1);
+    rectangleTex(-4.4, 1.11, -0.8, 0.45, 0.1, 0, 0, 0, texture[9], 1);
+    rectangleTex(-4.4, 0.16, -0.39, 0.45, 1, 0, 0, 0, texture[9], 1);
+    rectangleTex(-4.4, 0.16, 0.39, 0.45, 1, 0, 0, 0, texture[9], 1);
+    rectangleTex(-4.4, 0.85, -0.6, 0.45, 0.62, -45, 0, 0, texture[9], 1);
+    rectangleTex(-4.4, 0.85, 0.6, 0.45, 0.62, 45, 0, 0, texture[9], 1);
 
     // rear light
     if (isBraking)
@@ -285,11 +287,11 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
     }
 
     // front wings
-    SetMaterial(colors[1][0], colors[1][1], colors[1][2],
+    SetMaterial(1.0, 1.0, 1.0,
                 colors[1][0] * 1.2, colors[1][1] * 1.2, colors[1][2] * 1.2,
                 0.8, 0.8, 0.8, 80);
-    rectangle(2.4, -0.15, 0.6, 0.45, 1.5, -90, 0, -18);
-    rectangle(2.4, -0.15, -0.6, 0.45, 1.5, -90, 0, 18);
+    rectangleTex(2.4, -0.15, 0.6, 0.45, 1.5, -90, 0, -18, texture[9], 1);
+    rectangleTex(2.4, -0.15, -0.6, 0.45, 1.5, -90, 0, 18, texture[9], 1);
 
     // Suspension
     SetMaterial(0.25, 0.25, 0.28, 0.4, 0.4, 0.43, 1.0, 1.0, 1.0, 100);
@@ -315,22 +317,28 @@ void drawF1Car(float length, float width, float breadth, unsigned int texture[],
 
     // Wheels
     // Black for tires
-    SetMaterial(0.01, 0.01, 0.01, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 5);
+
+    if (!isBraking && fabs(velocity) > 0.01f)
+    {
+        carRotateAngle = (carRotateAngle - 10) % 360;
+    }
+
+    SetMaterial(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1, 0.1, 0.1, 5);
 
     // Front wheels with steering rotation
     glPushMatrix();
     glRotated(-steeringAngle * 0.4, 0, 1, 0); // Rotate around Y axis for steering
-    cylinder(1, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinderTex(1, 0, -1.35, 0.6, 0.6, 20, 90, carRotateAngle, 0, 1, texture, 10, 11);
     glPopMatrix();
 
     glPushMatrix();
     glRotated(-steeringAngle * 0.4, 0, 1, 0); // Rotate around Y axis for steering
-    cylinder(1, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinderTex(1, 0, 1.35, 0.6, 0.6, 20, 90, carRotateAngle, 0, 1, texture, 10, 11);
     glPopMatrix();
 
     // Rear wheels
-    cylinder(-4, 0, -1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
-    cylinder(-4, 0, 1.35, 0.6, 0.6, 20, 90, 0, 0, 0, 0, 0);
+    cylinderTex(-4, 0, -1.35, 0.6, 0.6, 20, 90, carRotateAngle, 0, 1, texture, 10, 11);
+    cylinderTex(-4, 0, 1.35, 0.6, 0.6, 20, 90, carRotateAngle, 0, 1, texture, 10, 11);
 
     // cockpit bezier and halo
     SetMaterial(colors[0][0], colors[0][1], colors[0][2],
@@ -714,7 +722,7 @@ void drawF1Garage(double x, double y, double z, double scale, unsigned int textu
     // THE F1 CAR
     glPushMatrix();
     glRotated(-90, 0, 1, 0); // Rotate to face front opening
-    drawF1Car(1, 1, 1, texture, colors, 0, 0);
+    drawF1Car(1, 1, 1, texture, colors, 0, 0, 0);
     glPopMatrix();
 
     glPopMatrix();
