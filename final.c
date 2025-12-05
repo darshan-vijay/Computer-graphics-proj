@@ -106,9 +106,9 @@ float astonMartinColors[3][3] = {
 };
 
 // McLaren car position and physics
-double mclarenX = 4.0;
-double mclarenY = 0.0;
-double mclarenZ = 1;
+double ferrariX = 4.0;
+double ferrariY = 0.0;
+double ferrariZ = 1;
 
 double headingAngle = 0.0; // Actual direction car is facing (for movement)
 double carVelocity = 0.0;  // Current forward velocity
@@ -132,9 +132,9 @@ void updatePOVPosition()
    double radHeading = (90.0 + headingAngle) * M_PI / 180.0; // adding 90 because the car model faces +X initially
    double offsetDistance = 2.0;                              // Distance behind car
 
-   povX = mclarenX - offsetDistance * sin(radHeading);
-   povY = mclarenY + 0.45; // Height above car
-   povZ = mclarenZ - offsetDistance * cos(radHeading);
+   povX = ferrariX - offsetDistance * sin(radHeading);
+   povY = ferrariY + 0.45; // Height above car
+   povZ = ferrariZ - offsetDistance * cos(radHeading);
 }
 
 // Light values
@@ -451,7 +451,8 @@ void display(SDL_Window *window)
       // Draw skybox at camera origin
       glPushMatrix();
       glTranslatef(Ex, Ey, Ez);
-      DrawSkybox(70.0f, currentSky);
+      if (mode == 0)
+         DrawSkybox(70.0f, currentSky);
       glPopMatrix();
 
       fogIntensity = 0.04f;
@@ -468,7 +469,8 @@ void display(SDL_Window *window)
       // Draw skybox at camera position
       glPushMatrix();
       glTranslatef(povX, povY, povZ);
-      DrawSkybox(70.0f, currentSky);
+      if (mode == 0)
+         DrawSkybox(70.0f, currentSky);
       glPopMatrix();
 
       fogIntensity = 0.12f;
@@ -476,7 +478,7 @@ void display(SDL_Window *window)
    }
    case 2: // POV view
    {
-      gluLookAt(povX, povY, povZ, mclarenX, mclarenY + 0.2, mclarenZ, 0, 1, 0);
+      gluLookAt(povX, povY, povZ, ferrariX, ferrariY + 0.2, ferrariZ, 0, 1, 0);
 
       // Draw skybox at camera position
       glPushMatrix();
@@ -611,7 +613,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(6, 0, -1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0, 0);
+      drawF1Car(1, 1, 1, texture, mclarenColors, 0, 0, 0);
       glPopMatrix();
 
       // start marking 2
@@ -622,10 +624,10 @@ void display(SDL_Window *window)
 
       // McLaren car - moving car
       glPushMatrix();
-      glTranslated(mclarenX, mclarenY, mclarenZ);
+      glTranslated(ferrariX, ferrariY, ferrariZ);
       glRotated(headingAngle, 0, 1, 0); // heading direction
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking, carVelocity);
+      drawF1Car(1, 1, 1, texture, ferrariColors, steeringAngle, isBraking, carVelocity);
       glPopMatrix();
 
       // start marking 3
@@ -848,8 +850,8 @@ void update()
    if (fabs(carVelocity) > 0.001)
    {
       double radRot = (90.0 + headingAngle) * M_PI / 180.0;
-      mclarenX += carVelocity * sin(radRot);
-      mclarenZ += carVelocity * cos(radRot);
+      ferrariX += carVelocity * sin(radRot);
+      ferrariZ += carVelocity * cos(radRot);
    }
    else
    {
@@ -869,6 +871,8 @@ void update()
 int key()
 {
    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+
+   //  Increase/decrease elevation
 
    //  Exit on ESC
    if (keys[SDL_SCANCODE_ESCAPE])
@@ -944,6 +948,14 @@ int key()
    //  F3 key - toggle light distance
    else if (keys[SDL_SCANCODE_F3])
       distance = (distance == 1) ? 6 : 1;
+
+   if (mode > 0)
+   {
+      if (keys[SDL_SCANCODE_UP])
+         ph += 5;
+      else if (keys[SDL_SCANCODE_DOWN])
+         ph -= 5;
+   }
 
    th %= 360;
 
