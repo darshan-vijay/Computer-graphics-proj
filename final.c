@@ -605,7 +605,7 @@ void display(SDL_Window *window)
       glPushMatrix();
       glTranslated(6, 0, -1);
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, mclarenColors, 0, 0, 0);
+      drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0, 0);
       glPopMatrix();
 
       // start marking 2
@@ -619,7 +619,7 @@ void display(SDL_Window *window)
       glTranslated(ferrariX, ferrariY, ferrariZ);
       glRotated(headingAngle, 0, 1, 0); // heading direction
       glScaled(0.2, 0.2, 0.2);
-      drawF1Car(1, 1, 1, texture, ferrariColors, steeringAngle, isBraking, carVelocity);
+      drawF1Car(1, 1, 1, texture, mclarenColors, steeringAngle, isBraking, carVelocity);
       glPopMatrix();
 
       // start marking 3
