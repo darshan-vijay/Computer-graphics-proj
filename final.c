@@ -30,7 +30,7 @@ int fov = 60;        //  Field of view (for perspective)
 double asp = 1;      //  Aspect ratio
 double dim = 8;      //  Size of world
 
-const char *text[] = {"F1 Racing Circuit", "Stand", "Tree", "F1 Cars scene"};
+const char *text[] = {"F1 Racing Circuit", "F1 Garage", "F1 Car", "GrandStand", "Support Banners", "Tire Barriers"};
 const char *textPers[] = {"Perspective", "Start line", "POV"};
 
 // for Shaders rain and splash
@@ -427,7 +427,7 @@ void DrawSkybox(float boxSize, GLuint *skyTextures)
  */
 void display(SDL_Window *window)
 {
-   //  Erase the window and the depth buffer
+   glClearColor(0.0f, 0.3f, 0.6f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    //  Enable Z-buffering in OpenGL
    glEnable(GL_DEPTH_TEST);
@@ -528,13 +528,6 @@ void display(SDL_Window *window)
    //  Decide what to draw
    switch (mode)
    {
-   case -1:
-
-      glPushMatrix();
-      drawSupportBanner(3.0, 6.0, 0.3, 5, barricadeTexture[2]);
-      glPopMatrix();
-      break;
-
    case 0:
       // first stand near start line
       glPushMatrix();
@@ -673,6 +666,34 @@ void display(SDL_Window *window)
 
    case 2:
       drawF1Car(1, 1, 1, texture, ferrariColors, 0, 0, 0);
+      break;
+
+   case 3:
+
+      glPushMatrix();
+      drawGrandStand();
+      glPopMatrix();
+      break;
+
+   case 4:
+
+      glPushMatrix();
+      glTranslated(4, 0, 0);
+      drawSupportBanner(3.0, 6.0, 0.3, 5, barricadeTexture[1]);
+      glPopMatrix();
+      glPushMatrix();
+      glTranslated(0, 0, 0);
+      drawSupportBanner(3.0, 6.0, 0.3, 3, barricadeTexture[0]);
+      glPopMatrix();
+      glPushMatrix();
+      glTranslated(-4, 0, 0);
+      drawSupportBanner(3.0, 6.0, 0.3, 4, barricadeTexture[2]);
+      glPopMatrix();
+      break;
+   case 5:
+      glPushMatrix();
+      drawTireBarrierRow(0, 0, 0, 3, 3);
+      glPopMatrix();
       break;
    }
 
@@ -889,7 +910,7 @@ int key()
    //  Toggle Mode
    else if (keys[SDL_SCANCODE_M])
    {
-      mode = (mode + 1) % 3;
+      mode = (mode + 1) % 6;
       if (mode == 0)
       {
          dim = 8;
@@ -902,6 +923,20 @@ int key()
          dim = 10;
          th = -25;
          ph = 10;
+      }
+      else if (mode == 3)
+      {
+         perspective = 0;
+         dim = 8;
+         th = -135;
+         ph = 15;
+      }
+      else if (mode == 4)
+      {
+         perspective = 0;
+         dim = 8;
+         th = -260;
+         ph = 15;
       }
       else
       {

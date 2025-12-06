@@ -114,7 +114,7 @@ unsigned int LoadTexBMP(const char *file)
    return texture;
 }
 
-// AI generated Code
+// This function changes are AI generated
 // Load texture from BMP file and add an alpha channel
 unsigned int LoadTexBMPTransparent(const char *file, int blackThreshold)
 {

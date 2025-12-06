@@ -12,6 +12,7 @@ double P[3][3] = {
 
 double curve[50 + 1][3];
 
+// This function (GetBezierPoints) is AI generated I wanted to know the formula and construction of it
 // Code to get Bezier points
 void GetBezierPoints(double t, double result[3])
 {
@@ -28,6 +29,7 @@ void GetBezierPoints(double t, double result[3])
     result[1] = b0 * P[0][1] + b1 * P[1][1] + b2 * P[2][1];
     result[2] = b0 * P[0][2] + b1 * P[1][2] + b2 * P[2][2];
 }
+
 // draws the first curve and stores the points
 void GetBezierCurve()
 {
@@ -1728,42 +1730,54 @@ void drawGrandStand()
     float endZ = (standHeight)*cos(slantAngle * M_PI / 180.0f);
 
     // Left pillar
+    glPushMatrix();
+    glTranslatef(0, midY / 2, 0);
     cylinder(-standWidth / 2 - 1.2f, 0, midZ - 1.5f,
-             0.25f, midY + 1, 16,
+             0.25f, midY, 16,
              0, 0, 0, 0, 0, 0);
+    glPopMatrix();
 
     // Right pillar
+    glPushMatrix();
+    glTranslatef(0, midY / 2, 0);
     cylinder(standWidth / 2 + 0.2f, 0, midZ - 1.5f,
-             0.25f, midY + 1, 16,
+             0.25f, midY, 16,
              0, 0, 0, 0, 0, 0);
+    glPopMatrix();
 
     // Left longer pillar
+    glPushMatrix();
+    glTranslatef(0, midY + 0.4, 0);
     cylinder(-standWidth / 2 - 1.2f, 0, midZ + 1.5f,
-             0.25f, midY * 2 + 3.0f, 16,
+             0.25f, midY * 2 + 0.8, 16,
              0, 0, 0, 0, 0, 0);
+    glPopMatrix();
 
     // Right longer pillar
+    glPushMatrix();
+    glTranslatef(0, midY + 0.4, 0);
     cylinder(standWidth / 2 + 0.2f, 0, midZ + 1.5f,
-             0.25f, midY * 2 + 3.0f, 16,
+             0.25f, midY * 2 + 0.8, 16,
              0, 0, 0, 0, 0, 0);
+    glPopMatrix();
 
     // draw closing triangles
     glBegin(GL_TRIANGLES);
-    glVertex3f(-standWidth / 2 - 1.2f, 0, 0);
-    glVertex3f(-standWidth / 2 - 1.2f, endY, endZ);
-    glVertex3f(-standWidth / 2 - 1.2f, 0, endZ);
+    glVertex3f(-standWidth / 2 - 1.0f, 0, -0.2);
+    glVertex3f(-standWidth / 2 - 1.0f, endY + 0.2f, endZ + 0.2f);
+    glVertex3f(-standWidth / 2 - 1.0f, 0, endZ + 0.2f);
     glEnd();
 
     glBegin(GL_TRIANGLES);
-    glVertex3f(standWidth / 2 + 0.1f, 0, 0);
-    glVertex3f(standWidth / 2 + 0.1f, endY, endZ);
-    glVertex3f(standWidth / 2 + 0.1f, 0, endZ);
+    glVertex3f(standWidth / 2, 0, -0.2);
+    glVertex3f(standWidth / 2, endY + 0.2f, endZ + 0.2f);
+    glVertex3f(standWidth / 2, 0, endZ + 0.2f);
     glEnd();
 
     // draw platform
     glPushMatrix();
-    glTranslatef(-0.4f, 0, 0.5);
-    cube(0, 0, endZ, (standWidth + 1.2f) / 2, endY, 0.6, 0, 0, 0, 0);
+    glTranslatef(-0.5f, endY * 0.5, 0.5);
+    cube(0, 0, endZ, (standWidth + 1.8f) / 2, endY * 0.6, 0.6, 0, 0, 0, 0);
     glPopMatrix();
 
     // railing on the platform
@@ -1773,20 +1787,21 @@ void drawGrandStand()
     for (int p = 0; p < numPosts; p++)
     {
         float postX = -standWidth / 2 + (standWidth / (numPosts - 1)) * p;
-        cylinder(postX, endY, endZ + 1.0f, 0.05f,
+        cylinder(postX, endY + 0.5f, endZ + 0.6f, 0.05f,
                  1.0f,
                  8,
                  0, 0, 0, 0, 0, 0);
     }
     // Top bar
     glPushMatrix();
-    glTranslatef(0, endY + 0.5f, endZ + 1.0f);
+    glTranslatef(0, endY + 1.0f, endZ + 0.6f);
     glRotatef(90, 0, 1, 0);
     cylinder(0, 0, 0, 0.03f, standWidth, 8, 90, 0, 0, 0, 0, 0);
+
     glPopMatrix();
     // Bottom bar
     glPushMatrix();
-    glTranslatef(0, endY + 0.1f, endZ + 1.0f);
+    glTranslatef(0, endY + 0.6f, endZ + 0.6f);
     glRotatef(90, 0, 1, 0);
     cylinder(0, 0, 0, 0.03f, standWidth, 8, 90, 0, 0, 0, 0, 0);
     glPopMatrix();
