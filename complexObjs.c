@@ -1763,9 +1763,15 @@ void drawGrandStand()
 
     // draw closing triangles
     glBegin(GL_TRIANGLES);
-    glVertex3f(-standWidth / 2 - 1.0f, 0, -0.2);
-    glVertex3f(-standWidth / 2 - 1.0f, endY + 0.2f, endZ + 0.2f);
+    glVertex3f(-standWidth / 2 - 1.0f, 0, -0.3);
+    glVertex3f(-standWidth / 2 - 1.0f, endY + 0.3f, endZ + 0.2f);
     glVertex3f(-standWidth / 2 - 1.0f, 0, endZ + 0.2f);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glVertex3f(-standWidth / 2, 0, -0.3);
+    glVertex3f(-standWidth / 2, endY + 0.3f, endZ + 0.2f);
+    glVertex3f(-standWidth / 2, 0, endZ + 0.2f);
     glEnd();
 
     glBegin(GL_TRIANGLES);
