@@ -14,7 +14,6 @@
  *  ESC        Exit
  *  [          Lower light
  *  ]          Higher light
- *  l,L        Toggle light
  *  F3         Toggle light distance
  */
 
@@ -958,9 +957,6 @@ int key()
          perspective = (perspective + 1) % 3;
       }
    }
-   //  Toggle lighting
-   else if (keys[SDL_SCANCODE_L])
-      light = !light;
    //  Toggle axes
    else if (keys[SDL_SCANCODE_Q])
       axes = 1 - axes;

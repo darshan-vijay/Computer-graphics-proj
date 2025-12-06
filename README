@@ -14,12 +14,19 @@
  *  ESC        Exit
  *  [          Lower light
  *  ]          Higher light
- *  l,L        Toggle light
  *  F3         Toggle light distance
- *  
  *
  * use make command to get the binaries
  * ./final to view the project
- * Yet to simulate movement in other cars too.
- * Yet to add textures to all objects.
+ * To drive the car, stay in the F1 circuit mode and press w/a/s/d and space keys, to drive the car.
+ * I have moved to SDL to support the car movements with multiple key presses at the same time .
+ * The car has acceleration sounds when you move at high velocities, when you brake the brake lights illuminate, and pressing A or D moves the front wheels accordingly, the tires rotate too.
+ * The car's engine cap is a Bezier curve rotated around x axis.(Pro tip: move to day mode to hear it clearly.)
+ * I have 3 road functions, that creates a straight, right turn and left turn roads, which were used to piece together the circuit.
+ * I have a Garage with cars, built a pit lane, a fence, a grandstand ,a tire barrier, support banner with textures, barricades on the sides of the straight road and red/white curbs in the turnings.
+ * There is a night Mode the program launches with this mode. You can hear a rain background music, and you can see rain effects and splash effects made using Shaders.
+ * The skybox is different when you switch between the night and day modes.
+ * The entire code is mostly modular, reusing the support banners to add different objects was a good example for this.
+ * I tried working on the collision detection, but the way I built the barricades made it difficult to implement it. If I had known in the start, would have built the circuit in a different way.
+ * I tried simulating motion of the cars,but that felt to artificial, so did not include here.
  */
